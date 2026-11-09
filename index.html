@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法务合同工具箱 · 填报助手与审核要点</title>
+<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<style>
+:root{
+  --blue:#1a5fb4; --blue-weak:#eaf2fc; --red:#c01c28; --red-weak:#fdecea;
+  --amber:#b35900; --amber-weak:#fff4e5; --green:#1e7d32; --green-weak:#e8f5e9;
+  --ink:#1c2733; --muted:#66707c; --line:#d7dde4; --bg:#f4f6f9; --card:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65}
+header{background:linear-gradient(135deg,#123c73,#1a5fb4);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:20px;font-weight:700;letter-spacing:.05em}
+header .sub{font-size:12px;opacity:.85}
+.badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:2px 12px;font-size:12px}
+nav.tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid var(--line);padding:0 28px}
+nav.tabs button{border:none;background:none;padding:14px 22px;font-size:15px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-weight:600}
+nav.tabs button.on{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-weak)}
+main{max-width:1180px;margin:22px auto;padding:0 20px}
+.panel{display:none}
+.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 24px;margin-bottom:18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+.card h2{font-size:16px;margin-bottom:6px;color:var(--blue)}
+.card h2 .no{display:inline-block;background:var(--blue);color:#fff;border-radius:6px;font-size:12px;padding:1px 8px;margin-right:8px;vertical-align:2px}
+.card .desc{color:var(--muted);font-size:13px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px 22px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}
+.field label .req{color:var(--red);margin-left:2px}
+.field input[type=text],.field input[type=date],.field input[type=number],.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+.field textarea{min-height:64px;resize:vertical}
+.field .hint{font-size:12px;color:var(--muted);margin-top:3px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 14px;padding:4px 0}
+.opts label{font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.steps button{border:1px solid var(--line);background:#fff;border-radius:18px;padding:6px 14px;font-size:13px;cursor:pointer;color:var(--muted)}
+.steps button.cur{background:var(--blue);border-color:var(--blue);color:#fff}
+.steps button.done{border-color:var(--blue);color:var(--blue)}
+.navbtns{display:flex;justify-content:space-between;margin-top:6px;flex-wrap:wrap;gap:10px}
+button.primary{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:14px;cursor:pointer;font-weight:600}
+button.primary:disabled{background:#a9c1de;cursor:not-allowed}
+button.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue);border-radius:7px;padding:8px 18px;font-size:13px;cursor:pointer}
+button.danger{background:#fff;color:var(--red);border:1px solid var(--red);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer}
+.risk{border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px}
+.risk.red{background:var(--red-weak);border:1px solid #f2b8b5;color:var(--red)}
+.risk.warn{background:var(--amber-weak);border:1px solid #f0d9b5;color:var(--amber)}
+.risk.red b,.risk.warn b{font-weight:700}
+.ack{margin-top:4px}
+.summary-table{width:100%;border-collapse:collapse;font-size:13px}
+.summary-table th,.summary-table td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.summary-table th{background:var(--blue-weak);white-space:nowrap;width:190px}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#123c73;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;display:none;z-index:99}
+.layer-pick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.layer-pick button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;color:var(--muted)}
+.layer-pick button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+table.review{width:100%;border-collapse:collapse;font-size:13px}
+table.review th,table.review td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+table.review th{background:var(--blue-weak)}
+table.review td.item-name{width:130px;font-weight:600}
+table.review td.focus{width:300px;color:var(--ink)}
+.redline{display:inline-block;background:var(--red-weak);color:var(--red);border-radius:4px;font-size:11px;padding:0 6px;margin-left:4px;font-weight:700}
+select.judge{padding:4px 6px;border-radius:5px;border:1px solid var(--line);font-size:13px}
+select.judge.g{background:var(--green-weak);color:var(--green);font-weight:700}
+select.judge.y{background:var(--amber-weak);color:var(--amber);font-weight:700}
+select.judge.r{background:var(--red-weak);color:var(--red);font-weight:700}
+td textarea{width:100%;min-height:52px;border:1px solid var(--line);border-radius:5px;font-size:12px;padding:5px 7px;font-family:inherit}
+td input.loc{width:110px;border:1px solid var(--line);border-radius:5px;font-size:12px;padding:5px 7px}
+.conclusion{font-size:15px;font-weight:700;padding:12px 18px;border-radius:8px;margin:14px 0}
+.conclusion.pass{background:var(--green-weak);color:var(--green);border:1px solid #bcd9c1}
+.conclusion.fix{background:var(--amber-weak);color:var(--amber);border:1px solid #f0d9b5}
+.conclusion.reject{background:var(--red-weak);color:var(--red);border:1px solid #f2b8b5}
+.scripts .script{background:#f8fafc;border:1px dashed var(--line);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:13px}
+.scripts .script h4{font-size:13px;color:var(--blue);margin-bottom:6px}
+.scripts .script p{white-space:pre-wrap}
+.scripts .script button{float:right;margin-left:8px}
+.addscript{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:10px 0}
+.addscript input,.addscript textarea{width:100%;border:1px solid var(--line);border-radius:6px;font-size:13px;padding:7px 10px;font-family:inherit;margin-bottom:8px}
+.addscript textarea{min-height:56px}
+textarea.op{width:100%;min-height:220px;border:1px solid var(--line);border-radius:8px;font-size:13px;padding:12px;font-family:inherit;line-height:1.7}
+.sec-title{font-weight:700;font-size:14px;margin:16px 0 8px;color:var(--blue)}
+.note{font-size:12px;color:var(--muted);background:#f8fafc;border-left:3px solid var(--line);padding:8px 12px;margin-bottom:14px}
+.uploadbox{border:2px dashed var(--line);border-radius:10px;padding:18px;text-align:center;background:#fbfcfe;cursor:pointer}
+.uploadbox:hover{border-color:var(--blue);background:var(--blue-weak)}
+.scanitem{font-size:12px;background:var(--amber-weak);border-radius:6px;padding:5px 10px;margin:4px 0;color:var(--amber)}
+mark.ph{background:#fff3bf;color:#8a6d00;padding:0 2px;border-radius:3px}
+.draftbox{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:16px;background:#fff;font-size:13px}
+.draftbox p{margin:0 0 6px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚖️ 法务合同工具箱</h1>
+  <span class="sub">形象授权 · 图书出版 · 合同填报与层级审核</span>
+  <span class="badge">数据仅在本机浏览器内处理，不上传服务器</span>
+</header>
+<nav class="tabs">
+  <button id="tab1" class="on" onclick="switchTab(1)">① 商业信息填报助手</button>
+  <button id="tab2" onclick="switchTab(2)">② 审核层级要点与意见生成</button>
+</nav>
+<main>
+
+<!-- ================= 模块一：填报助手 ================= -->
+<section id="panel1" class="panel on">
+  <div class="card">
+    <h2><span class="no">类型</span>选择合同类型</h2>
+    <div class="desc">不同合同类型使用不同的填报清单；切换类型会载入对应的表单（各类表单草稿独立保存）。</div>
+    <div class="layer-pick" id="typebar"></div>
+    <div style="margin-top:10px"><button class="ghost" onclick="openSchema()">⚙ 字段设置（自定义各类型填写要素）</button></div>
+  </div>
+  <div class="card">
+    <h2><span class="no">模板</span>上传合同模板（可选）</h2>
+    <div class="desc">上传 .docx 合同模板后：自动扫描模板中的占位符/残句/空白附件；填完信息后可按模板生成<b>合同初稿</b>（已填项自动代入，未填项黄色高亮，供法务终审）。不上传也可正常填报。</div>
+    <div class="uploadbox" onclick="document.getElementById('tplfile').click()">
+      <b>点击选择文件</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="tplname"></div>
+    </div>
+    <input type="file" id="tplfile" accept=".docx,.txt" style="display:none" onchange="onTplFile(this)">
+    <div id="tplscan" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2><span class="no">参考</span>对方模板参考（快速形成我方模板）</h2>
+    <div class="desc">授权类合作中对方常先发来他们的模板。上传后自动<b>提取关键要素</b>（许可方式/转授权/金额/税率/区域/期限/违约金/渠道），可一键带入填报；并可基于对方模板生成<b>我方口径的模板初稿</b>——非独家授权、不可转授权、甲方所在地法院等标准立场自动替换并标黄，经法务逐条核对后即可沉淀为我方模板。</div>
+    <div class="uploadbox" onclick="document.getElementById('reffile').click()">
+      <b>点击选择对方模板</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="refname"></div>
+    </div>
+    <input type="file" id="reffile" accept=".docx,.txt" style="display:none" onchange="onRefFile(this)">
+    <div id="refscan" style="margin-top:12px"></div>
+    <div class="navbtns" style="margin-top:10px">
+      <button class="ghost" id="refFillBtn" onclick="refFill()" style="display:none">把提取要素带入填报</button>
+      <button class="primary" id="refDraftBtn" onclick="downloadRefDraft()" style="display:none;background:var(--green)">生成我方模板初稿（Word）</button>
+    </div>
+    <div id="refout" style="margin-top:16px"></div>
+  </div>
+  <div class="card">
+    <div class="note">用途：按引导逐项填写商业信息。填完自动校验红线与一致性，生成《商业信息提供清单（申请表）》；已上传模板的，可一键生成合同初稿。<b>标 * 为必填。</b></div>
+    <div class="steps" id="stepbar"></div>
+    <div id="stepbody"></div>
+    <div class="navbtns">
+      <button class="ghost" id="prevBtn" onclick="stepMove(-1)">上一步</button>
+      <div>
+        <button class="ghost" onclick="saveDraft(true)">保存草稿</button>
+        <button class="primary" id="nextBtn" onclick="stepMove(1)">下一步</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2><span class="no">校验结果</span>风险自查</h2>
+    <div id="riskbox"></div>
+    <div id="ackbox"></div>
+    <div class="sec-title">申请表预览</div>
+    <div id="preview" style="max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:14px;background:#fff"></div>
+    <div class="navbtns" style="margin-top:14px">
+      <button class="ghost" onclick="copyText(buildFormDoc(true),'申请表已复制')">复制全文</button>
+      <button class="primary" id="dlBtn" onclick="downloadForm()">下载 Word 申请表</button>
+      <button class="primary" id="draftBtn" onclick="downloadDraft()" style="background:var(--green)">生成合同初稿（Word）</button>
+    </div>
+    <div id="draftout" style="margin-top:16px"></div>
+  </div>
+</section>
+
+<!-- ================= 模块二：审核要点 ================= -->
+<section id="panel2" class="panel">
+  <div class="card">
+    <div class="note">用途：按公司四级审核流转（业务初审 → 法务 → 财务 → 审批）逐项核查合同，标注红/黄/绿并定位条款，自动生成标准审核意见书与审核话术。<b>任一红项存在时，结论强制为"不同意签署"。</b></div>
+    <div class="layer-pick" id="layerbar"></div>
+    <div id="layerBody"></div>
+  </div>
+</section>
+
+</main>
+<footer>原创 IP 内容公司 · 法务合同工具箱（开源脱敏版） V1.3 ｜ 清单与要点由法务部维护，如与制度不一致以制度为准</footer>
+<div class="toast" id="toast"></div>
+<div id="schemaMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50" onclick="closeSchema()"></div>
+<div id="schemaPanel" style="display:none;position:fixed;top:3%;left:50%;transform:translateX(-50%);width:min(900px,95vw);max-height:92vh;overflow:auto;background:#fff;border-radius:12px;z-index:51;box-shadow:0 10px 40px rgba(0,0,0,.25);padding:18px"></div>
+
+<script>
+/* ============ 通用 ============ */
+function $(id){return document.getElementById(id)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2200)}
+function switchTab(n){for(let i=1;i<=2;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
+function copyText(txt,okmsg){navigator.clipboard.writeText(txt).then(()=>toast(okmsg||'已复制'),()=>toast('复制失败，请手动选择文本'))}
+function downloadWord(html, filename){
+  const doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+filename+'</title></head><body>'+html+'</body></html>';
+  const blob = new Blob(['\ufeff'+doc], {type:'application/msword;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename+'.doc';a.click();URL.revokeObjectURL(a.href);
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtDate(s){if(!s)return'';const p=s.split('-');return p[0]+'年'+(p[1]||'')+'月'+((p[2]||'').replace(/^0/,''))+'日'}
+
+/* ============ 模块一：合同类型与字段定义 ============ */
+const FSETS={
+image:{name:'形象授权',sets:[
+ {sec:'流转信息', desc:'本表流转与项目基本信息。', fields:[
+  {id:'dept',l:'申请部门',t:'text',req:1},
+  {id:'applicant',l:'申请人',t:'text',req:1},
+  {id:'applyDate',l:'申请日期',t:'date',req:1},
+  {id:'projectName',l:'项目名称',t:'text',req:1},
+  {id:'coopType',l:'合作类型',t:'select',opts:['商品授权（衍生品）','游戏授权','主题空间授权','数字/虚拟授权','联名推广','套餐/活动授权','其他'],req:1},
+  {id:'isRenew',l:'是否续约',t:'radio',opts:['首次合作','续约']},
+  {id:'origNo',l:'原合同编号（续约必填）',t:'text',showIf:{f:'isRenew',v:'续约'}},
+  {id:'urgentReason',l:'加急理由（如加急）',t:'text'},
+ ]},
+ {sec:'合作双方主体信息', desc:'名称必须与营业执照完全一致，禁止简称或品牌代称。', fields:[
+  {id:'ourName',l:'我方主体名称',t:'text',req:1},
+  {id:'partyName',l:'对方主体名称',t:'text',req:1,hint:'与营业执照逐字一致'},
+  {id:'partyCode',l:'对方统一社会信用代码',t:'text',req:1},
+  {id:'partyType',l:'对方主体性质',t:'radio',opts:['境内公司','境外公司','个体工商户'],req:1},
+  {id:'partyRegion',l:'境外注册地（境外主体必填）',t:'text',showIf:{f:'partyType',v:'境外公司'}},
+  {id:'partyAddr',l:'对方注册地址/实际经营地',t:'text'},
+  {id:'partyContact',l:'对方经办人/职务/联系方式',t:'text',req:1},
+  {id:'partyMail',l:'对方电子邮箱（通知送达用）',t:'text',hint:'合同通知条款依赖此邮箱，必须填写'},
+  {id:'partyYears',l:'对方成立年限/注册资本',t:'text'},
+  {id:'partyAff',l:'对方已知关联方（母公司/兄弟品牌）',t:'text',hint:'影响排他范围判断'},
+ ]},
+ {sec:'授权 IP 与形象信息', desc:'我方非原始权利人时，必须已取得允许再授权的上层授权文件。', fields:[
+  {id:'ipName',l:'涉及 IP 名称',t:'text',req:1},
+  {id:'characters',l:'具体形象/角色清单（逐一列明，附定妆图编号）',t:'textarea',req:1},
+  {id:'useForm',l:'拟使用形式',t:'checks',opts:['平面形象','立体形象','动画片段截取','声音/配音','全息/AR 呈现']},
+  {id:'rightsStatus',l:'我方持有权利状态',t:'radio',opts:['自有著作权','独占被许可','代理'],req:1},
+  {id:'regNo',l:'著作权登记号（如有）',t:'text'},
+  {id:'upperAuth',l:'上层授权文件（非自有著作权必答）',t:'radio',opts:['已附，且含可再授权条款','已附，未确认可再授权','未附','不适用（自有著作权）']},
+  {id:'chainNote',l:'权利链待确认事项（如有）',t:'textarea'},
+ ]},
+ {sec:'授权权利范围', desc:'授权权项必须逐项列明，禁止"等""相关一切权利"式概括表述。', fields:[
+  {id:'licType',l:'许可方式',t:'radio',opts:['独占','排他','普通'],req:1},
+  {id:'ourUse',l:'独占/排他时我方是否保留自行使用',t:'radio',opts:['保留（自营例外）','不保留','不适用（普通许可）']},
+  {id:'sublicensable',l:'是否允许对方转授权/分许可',t:'radio',opts:['允许','禁止'],req:1},
+  {id:'sublicScope',l:'转授权范围与对象（允许时必填）',t:'textarea',showIf:{f:'sublicensable',v:'允许'}},
+  {id:'rights',l:'具体授权权项（逐项勾选）',t:'checks',opts:['复制权','发行权','改编权','信息网络传播权','摄制权','商品化（衍生品开发）权','其他（注明）']},
+  {id:'rightsOther',l:'其他权项说明',t:'text',showIf:{f:'rights',has:'其他（注明）'}},
+  {id:'newWorks',l:'新形象/新作品自动纳入',t:'radio',opts:['排除（默认）','纳入（注明条件）']},
+  {id:'newWorksCond',l:'纳入条件',t:'text',showIf:{f:'newWorks',v:'纳入（注明条件）'}},
+ ]},
+ {sec:'授权产品、领域与渠道', desc:'授权商品类别是与对方产品企划案逐项核对后的结果，是认定越权违约的核心依据。', fields:[
+  {id:'categories',l:'授权商品类别清单（逐项列明）',t:'textarea',req:1,hint:'不得使用"等""相关产品"概括'},
+  {id:'excludedCats',l:'明确排除的类别',t:'textarea'},
+  {id:'priceRange',l:'单价区间/产品定位',t:'text'},
+  {id:'channels',l:'销售渠道',t:'checks',opts:['线下门店','综合电商','直播电商','私域','跨境出口']},
+  {id:'offlineRegion',l:'线下门店区域',t:'text',showIf:{f:'channels',has:'线下门店'}},
+  {id:'crossCountries',l:'跨境出口目的国（跨境必填）',t:'text',showIf:{f:'channels',has:'跨境出口'}},
+  {id:'themeSpace',l:'是否涉及主题空间/展陈',t:'radio',opts:['否','是（地点/面积/期限另行说明）']},
+  {id:'themeDetail',l:'主题空间详情',t:'text',showIf:{f:'themeSpace',v:'是（地点/面积/期限另行说明）'}},
+ ]},
+ {sec:'授权地域与期限', desc:'', fields:[
+  {id:'territory',l:'授权地域',t:'checks',opts:['中国大陆','中国港澳台','全球','特定国家/地区'],req:1},
+  {id:'specTerritory',l:'特定国家/地区列明',t:'text',showIf:{f:'territory',has:'特定国家/地区'}},
+  {id:'onlineCross',l:'线上无地域销售是否构成越区',t:'radio',opts:['无（已约定处理方式）','有（说明：另行补充）']},
+  {id:'startDate',l:'授权起始日',t:'date',req:1},
+  {id:'endDate',l:'授权截止日',t:'date',req:1},
+  {id:'prepPeriod',l:'上架准备期安排',t:'text'},
+  {id:'clearMonths',l:'清货期（月）',t:'number'},
+  {id:'clearFee',l:'清货期是否付费',t:'radio',opts:['免费','付费（金额另行说明）']},
+  {id:'renewal',l:'续约优先权',t:'radio',opts:['对方享有优先续约权（条件另行说明）','无']},
+ ]},
+ {sec:'商务与结算条款', desc:'本节为财务审核衔接项，计算基数与扣除项必须书面明确，不得留白。', fields:[
+  {id:'feeMode',l:'许可费模式',t:'radio',opts:['固定费用','保底金额+分成','纯分成','买断','套餐加购分成'],req:1},
+  {id:'pkgPrice',l:'套餐单价（套餐加购分成必填）',t:'text',showIf:{f:'feeMode',v:'套餐加购分成'}},
+  {id:'pkgFormula',l:'分成计算公式/单均分成金额（必须完整可执行）',t:'textarea',showIf:{f:'feeMode',v:'套餐加购分成'},hint:'例：套餐单价 × 加购数量 × 分成比例；公式残缺法务将退回'},
+  {id:'mgAmount',l:'保底金额（MG）',t:'text',showIf:{f:'feeMode',v:'保底金额+分成'}},
+  {id:'mgNodes',l:'保底支付节点',t:'text',showIf:{f:'feeMode',v:'保底金额+分成'}},
+  {id:'royalty',l:'分成比例/阶梯方案',t:'textarea',showIf:{f:'feeMode',v:'保底金额+分成'}},
+  {id:'royalty2',l:'分成比例说明（纯分成）',t:'textarea',showIf:{f:'feeMode',v:'纯分成'}},
+  {id:'calcBase',l:'分成计算基数',t:'radio',opts:['出厂价','批发价','零售价','净销售额']},
+  {id:'deductions',l:'扣除项（净销售额必填）',t:'text',showIf:{f:'calcBase',v:'净销售额'}},
+  {id:'settleCycle',l:'结算周期/对账安排',t:'text',req:1},
+  {id:'reportDeadline',l:'销售报表内容与报送时点',t:'text',hint:'例：每月 5 日前提供上月分渠道销售明细'},
+  {id:'auditRight',l:'审计权',t:'radio',opts:['我方保留（费用承担另行说明）','放弃']},
+  {id:'deposit',l:'定金/保证金（金额与退还条件）',t:'text'},
+  {id:'paymentInvoice',l:'付款方式与发票（类型/品目/税率）',t:'text',req:1,hint:'例：增值税专用发票，现代服务-许可费 6%，含税注明'},
+  {id:'overduePenalty',l:'逾期付款违约金（标准与解除天数）',t:'text',hint:'例：每日万分之五；逾期超 30 日甲方可解除'},
+ ]},
+ {sec:'销售计划与市场预估', desc:'估测数据仅限审核流转使用，按公司信息分级制度管理。', fields:[
+  {id:'salesY1',l:'第一年预估销售总额（万元）',t:'text',req:1},
+  {id:'salesY2',l:'第二年预估销售总额（万元）',t:'text'},
+  {id:'salesY3',l:'第三年预估销售总额（万元）',t:'text'},
+  {id:'firstOrder',l:'首批订单/首店开业计划',t:'text'},
+  {id:'partnerProof',l:'对方履约能力佐证（资质/过往 IP 合作案例）',t:'textarea'},
+  {id:'ourResources',l:'我方需投入的资源（设计/宣传/展会）',t:'textarea'},
+ ]},
+ {sec:'品控与履约管理', desc:'', fields:[
+  {id:'sampleApproval',l:'样品审批',t:'radio',opts:['需我方书面批准后方可量产（送样数量另行说明）','不要求']},
+  {id:'usageApproval',l:'使用方案送审（标注位置/色彩/图文组合，审核时限）',t:'text',hint:'例：使用前书面送审，5 个工作日内审核'},
+  {id:'brandMark',l:'版权标示与署名格式',t:'text',hint:'例：© ××文化传媒有限公司（各条款与物料格式须一致）'},
+  {id:'factoryFiling',l:'对方生产工厂是否需我方备案',t:'radio',opts:['需要','不需要']},
+  {id:'antiFake',l:'防伪与溯源',t:'checks',opts:['加贴防伪标识','溯源编码','暂不要求']},
+  {id:'monitoring',l:'市场监查与假冒品处理分工、打假/控价配合时限',t:'textarea',hint:'例：收到投诉或核查要求 2 个工作日内回复'},
+  {id:'recall',l:'召回与下架责任承担意向',t:'text'},
+ ]},
+ {sec:'游戏授权专用要素（游戏类合作填写）', desc:'对应游戏许可使用合同。非游戏类合作可跳过本节。', fields:[
+  {id:'gameType',l:'授权产品类别（游戏类型）',t:'radio',opts:['家用主机游戏','手机游戏','端游/客户端游戏','页游','小程序游戏','其他（注明）']},
+  {id:'gameName',l:'游戏名称（暂定名注明"以版号/上线名称为准"）',t:'text'},
+  {id:'gameContent',l:'授权内容（勾选）',t:'checks',opts:['卡通形象及配套图库','图库更新内容（授权期内提供）','主题音乐','动画素材','其他（注明）']},
+  {id:'gameContentOther',l:'其他授权内容说明',t:'text',showIf:{f:'gameContent',has:'其他（注明）'}},
+  {id:'deliverAfterPay',l:'图库交付时点',t:'radio',opts:['收到全额保底授权费后交付（推荐）','签约后 X 日内交付（说明）']},
+  {id:'devStart',l:'开发期起始日',t:'date'},
+  {id:'devEnd',l:'开发期截止日',t:'date'},
+  {id:'launchDeadline',l:'产品上线截止日',t:'date'},
+  {id:'termRule',l:'授权期限计算方式',t:'radio',opts:['以游戏正式上线之日起一年为准（推荐）','固定起止日期','其他（说明）']},
+  {id:'termRuleOther',l:'其他期限说明',t:'text',showIf:{f:'termRule',v:'其他（说明）'}},
+  {id:'offlineBuffer',l:'下线缓冲期',t:'radio',opts:['期满后 1 个月内全部渠道下架','期满后立即下架','其他（说明）']},
+  {id:'authCert',l:'《授权证明书》',t:'radio',opts:['收到全额保底授权费后开具（推荐）','签约后开具']},
+  {id:'opChannels',l:'运营渠道（勾选）',t:'checks',opts:['全渠道全平台','线上综合渠道（京东/抖音/淘宝等）','线下门店','硬件厂商渠道（品牌门店）','特定渠道（注明）']},
+  {id:'opChannelsNote',l:'特定渠道说明',t:'text',showIf:{f:'opChannels',has:'特定渠道（注明）'}},
+  {id:'opNotify',l:'运营信息书面提前通知',t:'radio',opts:['运营/试运营前 15 个工作日（推荐）','其他时限（说明）']},
+  {id:'thirdPartyLimit',l:'第三方元素限制条款（音乐/商标/字体等须对方自行取得许可）',t:'radio',opts:['已约定（推荐）','未约定']},
+  {id:'approvalFlow',l:'审批流程约定（勾选）',t:'checks',opts:['策划方案预先送审','完整软件包上线前送审','上线产品与审批版本一致','更新迭代同样送审']},
+  {id:'compliance',l:'合规要求（勾选）',t:'checks',opts:['取得游戏版号','青少年防沉迷系统','审批备案文书 3 个工作日内提供','软件著作权登记证书提供']},
+  {id:'oemRule',l:'第三方/关联公司代工开发',t:'radio',opts:['需我方书面同意+资质文件+补充协议+另开授权书（推荐）','禁止代工','允许（范围说明）']},
+  {id:'oemNote',l:'代工范围与管控说明',t:'textarea',showIf:{f:'oemRule',v:'允许（范围说明）'}},
+  {id:'promoRight',l:'我方对授权产品的宣传展示权',t:'radio',opts:['同意（我方自有及合作渠道均可）','仅限自有渠道','不同意']},
+  {id:'ipSplit',l:'合作产出知识产权划分',t:'checks',opts:['授权内容衍生的商誉与知识产权归我方','游戏代码/页面设计等原创内容归对方','无法分割部分另行书面约定','卡通形象及素材著作权完全归我方']},
+  {id:'returnDocs',l:'终止后处理（勾选）',t:'checks',opts:['3 日内交还授权相关资料','《授权证明书》原件寄回','全部渠道下架并提供证明','停止为用户提供服务']},
+ ]},
+ {sec:'特殊事项与风险自查', desc:'', fields:[
+  {id:'exclusiveReq',l:'对方是否要求独家/排他',t:'radio',opts:['否','是（已阅读风险提示）']},
+  {id:'priorConflicts',l:'同一形象是否存在已授权在先项目',t:'radio',opts:['无','有（已列明并确认无冲突）'],req:1},
+  {id:'conflictDetail',l:'在先项目说明',t:'textarea',showIf:{f:'priorConflicts',v:'有（已列明并确认无冲突）'}},
+  {id:'specialReqs',l:'对方提出的特殊要求摘要',t:'textarea'},
+  {id:'penalties',l:'模板违约金体系知悉（超范围/质量/转授权/虚报数据/逾期/保密）',t:'textarea',hint:'业务须知悉我方模板违约金标准，向对方谈判时不得擅自让步'},
+  {id:'termAfter',l:'解除后果与库存处理安排（清货/已付费用/物料处理）',t:'textarea'},
+  {id:'selfCheck',l:'业务部门自查意见（经办人/负责人）',t:'textarea'},
+  {id:'legalNotes',l:'需法务重点提示的事项',t:'textarea'},
+ ]},
+ {sec:'随表附件清单', desc:'附件不齐的，一审不予通过。', fields:[
+  {id:'atts',l:'已附附件',t:'checks',opts:['对方营业执照/注册证明复印件（加盖公章）','对方产品企划案或品类清单','销售预估表（分年度）','上层授权文件','原合同及履约情况（续约项目）','其他材料']},
+  {id:'attsOther',l:'其他附件说明',t:'text',showIf:{f:'atts',has:'其他材料'}},
+ ]},
+]},
+press:{name:'图书出版（出版社）',sets:[
+ {sec:'流转与签约信息', desc:'对应出版合同首部与签署页。', fields:[
+  {id:'contractNo',l:'合同编号',t:'text'},
+  {id:'signPlace',l:'签订地',t:'text',hint:'例：××市××区（影响管辖联系点）'},
+  {id:'bookTitle',l:'作品名称（系列名+册数）',t:'text',req:1,hint:'例：××百问百答系列（10-12册）；暂定名称的注明"暂定，出版名称双方协商确定"'},
+  {id:'authorship',l:'署名方式',t:'radio',opts:['××文化/著','××文化 出品 ×××/著','×××/著 ××文化出品','其他（另行说明）'],req:1},
+  {id:'authorshipOther',l:'署名方式说明',t:'text',showIf:{f:'authorship',v:'其他（另行说明）'}},
+  {id:'ourCopies',l:'合同份数：我方执',t:'radio',opts:['两份','一份','三份']},
+  {id:'partyCopies',l:'合同份数：对方执',t:'radio',opts:['两份','一份','三份']},
+ ]},
+ {sec:'对方（出版社）主体与开票信息', desc:'名称必须与出版社公章一致；开票信息供合同第八条填写。', fields:[
+  {id:'pressName',l:'出版社名称',t:'text',req:1,hint:'与出版社公章名称逐字一致'},
+  {id:'pressCode',l:'出版社统一社会信用代码',t:'text',req:1},
+  {id:'pressAddr',l:'出版社地址',t:'text'},
+  {id:'pressLegalRep',l:'出版社法定代表人/授权代表',t:'text'},
+  {id:'pressContact',l:'出版社编辑/联系人及电话',t:'text',req:1},
+  {id:'pubQualify',l:'出版经营资格确认',t:'radio',opts:['已核验（出版许可证有效）','待核验'],req:1},
+  {id:'invoiceUnit',l:'开票信息：单位名称',t:'text'},
+  {id:'invoiceTaxNo',l:'开票信息：纳税人识别号',t:'text'},
+  {id:'invoiceAddrTel',l:'开票信息：地址、电话',t:'text'},
+  {id:'invoiceBank',l:'开票信息：开户行及账号',t:'text'},
+ ]},
+ {sec:'权利许可（第一条）', desc:'对应合同第一条。出版权利范围必须与授权书/授权期限一致。', fields:[
+  {id:'grantTerritory',l:'授权地域',t:'radio',opts:['中国大陆（不含港澳台）','中国大陆+港澳台','全球'],req:1},
+  {id:'grantLang',l:'授权语言版本',t:'radio',opts:['简体中文','简体+繁体','多语种（列明）'],req:1},
+  {id:'bookForm',l:'授权出版物形式',t:'radio',opts:['具有ISBN号的装订成册纸质图书','含电子版','含有声版','其他（列明）'],req:1},
+  {id:'grantNature',l:'权利性质',t:'radio',opts:['独占专有使用权','排他','普通'],req:1},
+  {id:'grantRights',l:'授予的具体权项（逐项勾选）',t:'checks',opts:['复制权（印刷）','发行权（销售）','信息网络传播权','改编权'],req:1},
+  {id:'sublicensable',l:'对方转授权',t:'radio',opts:['仅限实现出版目的的必要限度内、且需我方书面同意（推荐）','允许（范围列明）','禁止'],req:1},
+  {id:'sublicNote',l:'转授权范围说明',t:'textarea',showIf:{f:'sublicensable',v:'允许（范围列明）'}},
+  {id:'nameChange',l:'书名变动不影响合同效力条款',t:'radio',opts:['已约定','未约定']},
+ ]},
+ {sec:'双方保证与赔偿上限（第二条）', desc:'对应合同第二条。赔偿上限直接影响我方风险敞口，须与法务确认。', fields:[
+  {id:'capRights',l:'权利瑕疵赔偿上限（我方承担）',t:'radio',opts:['已付款项的 0%','已付款项的 10%','已付款项的 20%','其他（说明）'],req:1},
+  {id:'capRightsOther',l:'其他上限说明',t:'text',showIf:{f:'capRights',v:'其他（说明）'}},
+  {id:'capPersonal',l:'人身权瑕疵赔偿上限（我方承担）',t:'radio',opts:['已付款项的 0%','已付款项的 10%','已付款项的 20%','其他（说明）']},
+  {id:'capPersonalOther',l:'其他上限说明',t:'text',showIf:{f:'capPersonal',v:'其他（说明）'}},
+  {id:'noDoubleGrant',l:'授权期内不重复许可条款',t:'radio',opts:['已约定','未约定']},
+  {id:'tortShare',l:'维权费用与赔偿分配',t:'radio',opts:['双方另行书面约定分担及分配比例（推荐）','我方承担','对方承担']},
+  {id:'freePreview',l:'宣传用免费试读比例',t:'radio',opts:['不超过总体篇幅 5%','其他比例（说明）','不提供']},
+  {id:'approvalInvalid',l:'未获出版批复则合同无效条款',t:'radio',opts:['已约定（推荐）','未约定']},
+  {id:'confPenalty',l:'保密违约金标准',t:'radio',opts:['人民币 10 万元或实际损失（以高者为准）','其他（说明）','未约定']},
+ ]},
+ {sec:'作品交付（第三、四条）', desc:'对应合同第三、四条。逾期交稿违约金按首次版税 1%/日计算。', fields:[
+  {id:'deliverDate',l:'交稿时间',t:'date',req:1},
+  {id:'deliverForm',l:'交付形式（勾选）',t:'checks',opts:['纸质','电子文档','其他（注明）'],req:1},
+  {id:'deliverFormOther',l:'其他交付形式说明',t:'text',showIf:{f:'deliverForm',has:'其他（注明）'}},
+  {id:'isFinal',l:'交付稿件为终稿',t:'radio',opts:['是（有修改提前告知对方）','否（分册分批交付，计划另附）']},
+  {id:'reviseDays',l:'收到修改要求后的完成时限',t:'radio',opts:['30 日','15 日','其他（说明）']},
+  {id:'reviseDaysOther',l:'其他时限说明',t:'text',showIf:{f:'reviseDays',v:'其他（说明）'}},
+  {id:'contentSelfCheck',l:'内容合规自查（不含禁止内容）',t:'radio',opts:['已完成三审自查','待编辑流程复核'],req:1},
+ ]},
+ {sec:'编辑加工、审校与修订（第五条）', desc:'对应合同第五条。修改补画次数与比例涉及我方成本，须确认。', fields:[
+  {id:'proofDays',l:'收到清样后审读时限',t:'radio',opts:['45 个工作日','30 个工作日','其他（说明）']},
+  {id:'proofDaysOther',l:'其他时限说明',t:'text',showIf:{f:'proofDays',v:'其他（说明）'}},
+  {id:'reviseCounts',l:'修改/补画次数上限（每册）',t:'radio',opts:['3 次','2 次','5 次','不限（需法务确认）']},
+  {id:'reviseRatio',l:'单次修改内容比例上限',t:'radio',opts:['不超过全本内容 5%','不超过 10%','其他（说明）']},
+  {id:'layout30',l:'版面改动超 30% 的改版费用承担',t:'radio',opts:['我方承担','双方另行协商','对方承担']},
+  {id:'designContract',l:'我方提供设计稿',t:'radio',opts:['是（另行签署《设计合同》）','否（出版社负责设计）']},
+ ]},
+ {sec:'纸质出版安排（第六条）', desc:'对应合同第六条。印数、出版时限、授权期与清货期为核心商务条件。', fields:[
+  {id:'reviewToPrintDays',l:'成稿交付后送印厂时限',t:'radio',opts:['45 个工作日','60 个工作日','其他（说明）']},
+  {id:'publishDays',l:'成稿交付后出版时限',t:'radio',opts:['60 个工作日','90 个工作日','其他（说明）']},
+  {id:'delayNotify',l:'出版延迟的提前通知期限',t:'radio',opts:['10 日','15 日','30 日']},
+  {id:'delayPenalty',l:'逾期出版违约金',t:'radio',opts:['全套版税的 10%','全套版税的 20%','其他（说明）','未约定（需法务确认）']},
+  {id:'delayPenaltyOther',l:'其他违约金说明',t:'text',showIf:{f:'delayPenalty',v:'其他（说明）'}},
+  {id:'minPrint',l:'单本印数保底（册）',t:'text',req:1,hint:'例：100,000 册'},
+  {id:'formatSpec',l:'开本/装帧/用纸',t:'text'},
+  {id:'pricing',l:'定价区间（元）',t:'text'},
+  {id:'grantYears',l:'授权期（首版出版后）',t:'radio',opts:['满 5 年','满 3 年','满 10 年','其他（说明）'],req:1},
+  {id:'grantYearsOther',l:'其他授权期说明',t:'text',showIf:{f:'grantYears',v:'其他（说明）'}},
+  {id:'reprintConsent',l:'重印/再版是否需我方同意',t:'radio',opts:['需要我方同意（推荐）','不需要'],req:1},
+  {id:'clearMonths',l:'清货期（自然月）',t:'radio',opts:['8 个月','6 个月','12 个月','其他（说明）']},
+  {id:'clearMonthsOther',l:'其他清货期说明',t:'text',showIf:{f:'clearMonths',v:'其他（说明）'}},
+  {id:'buyback',l:'清货期满未售完库存处理',t:'radio',opts:['我方可按定价成本价认购，不认购的对方按库存品处理','对方直接按库存品处理','其他（说明）'],req:1},
+  {id:'buybackOther',l:'其他库存处理说明',t:'text',showIf:{f:'buyback',v:'其他（说明）'}},
+  {id:'supplyEscape',l:'供应链价格大幅变动的协商解除权',t:'radio',opts:['已约定','未约定']},
+ ]},
+ {sec:'作品形式与权利保留（第七条）', desc:'对应合同第七条。未勾选的形式即为保留权利，禁止概括表述。', fields:[
+  {id:'grantedForms',l:'授权的形式（勾选，纸质图书为本次授权）',t:'checks',opts:['纸质图书','杂志期刊','电子版本','有声版本'],req:1},
+  {id:'reservedNote',l:'未授权形式保留声明',t:'radio',opts:['已明确"我方保留未授权形式全部知识产权，对方不主张任何未予明确许可的权利"（推荐）','未约定'],req:1},
+  {id:'postTerm',l:'授权期届满后我方自行使用/另行授权权利',t:'radio',opts:['已明确保留（推荐）','未约定']},
+ ]},
+ {sec:'许可使用费与结算（第八条）', desc:'对应合同第八条。先票后款、防伪标费用为该模板特色条款。', fields:[
+  {id:'payMode',l:'稿酬方式',t:'radio',opts:['版税','一次性稿酬','字数稿酬','买断'],req:1},
+  {id:'royaltyRate',l:'版税率（%）',t:'text',showIf:{f:'payMode',v:'版税'},hint:'例：统一 12%；可按印数阶梯约定'},
+  {id:'royaltyBase',l:'版税计算基数',t:'radio',opts:['定价 × 实销数','定价 × 印数'],showIf:{f:'payMode',v:'版税'},req:1},
+  {id:'lumpSum',l:'一次性稿酬金额',t:'text',showIf:{f:'payMode',v:'一次性稿酬'}},
+  {id:'payNodes',l:'支付节点（如半年/年度结算）',t:'text',req:1},
+  {id:'invoiceOrder',l:'开票与付款顺序',t:'radio',opts:['先开票后付款（增值税专用发票，推荐）','先付款后开票'],req:1},
+  {id:'taxRate',l:'税率',t:'radio',opts:['6%','13%','免税（说明）']},
+  {id:'ourBank',l:'我方收款账户（开户名/开户行/账号）',t:'textarea',req:1,hint:'必须为我方对公账户，与签约主体一致'},
+  {id:'settleCycle',l:'结算周期与对账安排',t:'text'},
+  {id:'auditRight',l:'审计权',t:'radio',opts:['我方保留','放弃']},
+ ]},
+ {sec:'防伪标管理（8.4–8.6）', desc:'对应合同 8.4–8.6。防伪标单价、丢失赔偿为我方权益条款，须业务知悉成本。', fields:[
+  {id:'antiFake',l:'是否加贴防伪镭射标',t:'radio',opts:['是（封底均需粘贴，生产量与防伪码对应）','否'],req:1},
+  {id:'antiFakePrice',l:'防伪标单价（元/个）',t:'text',showIf:{f:'antiFake',v:'是（封底均需粘贴，生产量与防伪码对应）'},hint:'例：0.035 元/个'},
+  {id:'antiFakeReplace',l:'破损防伪标免费更换比例',t:'radio',opts:['0.3% 以内','0.5% 以内','其他（说明）']},
+  {id:'antiFakePenalty',l:'未贴标且拒不整改的违约金',t:'radio',opts:['每次 3,000 元','每次 5,000 元','其他（说明）']},
+  {id:'lostPay',l:'防伪标丢失赔偿',t:'radio',opts:['按实际丢失数量对应版税赔偿','其他（说明）']},
+  {id:'antiFakeOther',l:'其他说明',t:'text',showIf:{f:'antiFakePenalty',v:'其他（说明）'}},
+ ]},
+ {sec:'衍生品与品牌管理（第九、十条）', desc:'对应合同第九、十条。衍生品权利必须书面保留。', fields:[
+  {id:'derivativeReserve',l:'衍生品开发权利归属',t:'radio',opts:['我方保留一切衍生品开发知识产权（必须）','一并授权出版社','未确定'],req:1},
+  {id:'giftDerivative',l:'随书附赠衍生品',t:'radio',opts:['有需求（双方另行商议）','无']},
+  {id:'brandMgr',l:'价格体系管理（控价）',t:'radio',opts:['双方共同维护','我方主导（对方配合）','未约定']},
+  {id:'tortCoop',l:'维权与打假配合义务',t:'radio',opts:['对方应及时配合提供材料（推荐）','未约定']},
+  {id:'globalTort',l:'我方全球范围维权权益保留',t:'radio',opts:['已约定（推荐）','未约定']},
+ ]},
+ {sec:'争议解决与送达（第十一、十二条）', desc:'对应合同第十一、十二条。', fields:[
+  {id:'jurisdiction',l:'争议管辖',t:'radio',opts:['原告所在地人民法院','我方所在地人民法院','对方所在地人民法院','仲裁（机构注明）'],req:1},
+  {id:'jurisdictionOther',l:'仲裁机构名称',t:'text',showIf:{f:'jurisdiction',v:'仲裁（机构注明）'}},
+  {id:'notifyDays',l:'联系方式变更的提前书面通知期',t:'radio',opts:['7 日','15 日','30 日']},
+  {id:'renewalNote',l:'续约/变更约定',t:'radio',opts:['另行商定（推荐）','已约定优先续约（条件注明）']},
+  {id:'renewalNoteOther',l:'优先续约条件',t:'text',showIf:{f:'renewalNote',v:'已约定优先续约（条件注明）'}},
+ ]},
+ {sec:'违约与风险自查', desc:'', fields:[
+  {id:'breachItems',l:'违约情形与违约金汇总（逾期交稿 1%/日/逾期出版/保密/未贴防伪标）',t:'textarea'},
+  {id:'confReq',l:'内容保密要求（出版前泄露防范）',t:'textarea'},
+  {id:'selfCheck',l:'业务部门自查意见',t:'textarea'},
+  {id:'legalNotes',l:'需法务重点提示的事项',t:'textarea'},
+ ]},
+ {sec:'随表附件清单', desc:'', fields:[
+  {id:'atts',l:'已附附件',t:'checks',opts:['交稿清单与分册计划','人物设定与插画文件','营销配合方案','防伪标样品及报价','其他材料']},
+  {id:'attsOther',l:'其他附件说明',t:'text',showIf:{f:'atts',has:'其他材料'}},
+ ]},
+]},
+license:{name:'出版授权（出版公司）',sets:[
+ {sec:'授权作品信息', desc:'适用：我方将作品/IP 授权给出版策划公司出版（签订出版授权协议）。', fields:[
+  {id:'workTitle',l:'作品名称',t:'text',req:1},
+  {id:'authors',l:'作者',t:'text',req:1},
+  {id:'workStatus',l:'作品状态',t:'radio',opts:['已完成','连载中（更新计划另行说明）'],req:1},
+  {id:'wordCount',l:'字数',t:'text'},
+ ]},
+ {sec:'被授权方信息', desc:'', fields:[
+  {id:'partyName',l:'出版公司名称',t:'text',req:1},
+  {id:'partyCode',l:'统一社会信用代码',t:'text',req:1},
+  {id:'partyScope',l:'经营范围是否含图书策划/出版物经营许可',t:'radio',opts:['是（已核对）','否','待核对'],req:1},
+  {id:'partyContact',l:'经办人/联系方式/邮箱',t:'text',req:1},
+ ]},
+ {sec:'授权权利', desc:'权项逐项列明，未授予的权利必须书面保留。', fields:[
+  {id:'grantItems',l:'授权权利种类（逐项勾选）',t:'checks',opts:['简体中文纸质出版','电子书','有声书','影视改编权','游戏改编权','周边商品开发权'],req:1},
+  {id:'region',l:'授权地域',t:'radio',opts:['中国大陆','全球','特定地区（注明）'],req:1},
+  {id:'specRegion',l:'特定地区列明',t:'text',showIf:{f:'region',v:'特定地区（注明）'}},
+  {id:'termStart',l:'授权起始日',t:'date',req:1},
+  {id:'termEnd',l:'授权截止日',t:'date',req:1},
+  {id:'exclusivity',l:'授权性质',t:'radio',opts:['独占','排他','普通'],req:1},
+  {id:'ourUse',l:'独占/排他时我方是否保留使用',t:'radio',opts:['保留（自营例外）','不保留','不适用']},
+  {id:'sublicensable',l:'是否允许转授权',t:'radio',opts:['允许','禁止'],req:1},
+  {id:'sublicScope',l:'转授权范围与对象',t:'textarea',showIf:{f:'sublicensable',v:'允许'}},
+ ]},
+ {sec:'稿酬与结算', desc:'', fields:[
+  {id:'payMode',l:'授权费方式',t:'radio',opts:['版税','一次性授权费','保底+版税'],req:1},
+  {id:'royaltyRate',l:'版税率（%）',t:'text',showIf:{f:'payMode',v:'版税'}},
+  {id:'royaltyBase',l:'版税计算基数',t:'radio',opts:['定价 × 印数','定价 × 实销数'],showIf:{f:'payMode',v:'版税'}},
+  {id:'mgAmount',l:'保底金额',t:'text',showIf:{f:'payMode',v:'保底+版税'}},
+  {id:'lumpSum',l:'一次性授权费金额',t:'text',showIf:{f:'payMode',v:'一次性授权费'}},
+  {id:'payNodes',l:'支付节点',t:'text',req:1},
+  {id:'settleCycle',l:'结算周期与对账',t:'text',req:1},
+  {id:'reportDeadline',l:'销售报表报送时点',t:'text'},
+  {id:'auditRight',l:'审计权',t:'radio',opts:['我方保留','放弃']},
+ ]},
+ {sec:'履约管理', desc:'', fields:[
+  {id:'pubDeadline',l:'出版时间承诺',t:'text',req:1},
+  {id:'minPrint',l:'最低首印数（册）',t:'text',req:1},
+  {id:'reclaim',l:'逾期未出版的回收权',t:'radio',opts:['已约定：逾期 X 月未出版，我方有权解除并回收授权','未约定'],req:1},
+  {id:'reprintTerms',l:'再版/重印约定',t:'text'},
+  {id:'coverApproval',l:'封面/装帧确认权',t:'radio',opts:['我方终审','对方决定']},
+  {id:'sampleBooks',l:'样书数量',t:'text'},
+ ]},
+ {sec:'权利保留与维权', desc:'', fields:[
+  {id:'reservedRights',l:'未授权权利保留声明（逐项列明保留权利）',t:'textarea',req:1},
+  {id:'tortDivision',l:'侵权维权分工与费用承担',t:'textarea'},
+  {id:'noReg',l:'禁止对方以作品元素注册商标/版权/专利',t:'radio',opts:['已约定','未约定'],req:1},
+  {id:'stockAfter',l:'终止后库存处理与电子版下架',t:'textarea'},
+ ]},
+ {sec:'违约与其他', desc:'', fields:[
+  {id:'breachSummary',l:'违约金体系（逾期结算/超范围出版/擅自转授权/保密）',t:'textarea'},
+  {id:'confReq',l:'内容保密要求',t:'textarea'},
+  {id:'selfCheck',l:'业务部门自查意见',t:'textarea'},
+  {id:'legalNotes',l:'需法务重点提示的事项',t:'textarea'},
+ ]},
+ {sec:'随表附件清单', desc:'', fields:[
+  {id:'atts',l:'已附附件',t:'checks',opts:['对方营业执照复印件','作品完整稿件','作品权利证明（著作权登记/创作证明）','营销方案','其他材料']},
+  {id:'attsOther',l:'其他附件说明',t:'text',showIf:{f:'atts',has:'其他材料'}},
+ ]},
+]}
+};
+
+/* ---- 字段设置（自定义填写要素）---- */
+const SCHEMA_KEY='lcschema';
+let schemaBuf=null, schemaTab=null;
+function deepClone(o){return JSON.parse(JSON.stringify(o))}
+(function applySchemaOnLoad(){try{const c=JSON.parse(localStorage.getItem(SCHEMA_KEY)||'null');if(c&&c.sets){for(const k in c.sets){if(FSETS[k]){FSETS[k].name=c.sets[k].name||FSETS[k].name;FSETS[k].sets=c.sets[k].sets}}}}catch(e){}})();
+
+let curType = localStorage.getItem('lctype') || 'image';
+if(!FSETS[curType]) curType='image';
+let F = FSETS[curType].sets;
+let cur=0; let D={}; const acks={};
+
+function pickType(t){
+  curType=t; F=FSETS[t].sets; D={}; for(const k in acks) delete acks[k]; cur=0;
+  localStorage.setItem('lctype',t); renderTypeBar(); renderSteps(); renderStep(); loadDraft();
+}
+function renderTypeBar(){
+  $('typebar').innerHTML=Object.keys(FSETS).map(k=>`<button class="${k===curType?'on':''}" onclick="pickType('${k}')">${FSETS[k].name}</button>`).join('');
+}
+
+/* ---- 字段设置面板 ---- */
+const FIELD_TYPES=[['text','文本'],['textarea','多行文本'],['date','日期'],['number','数字'],['select','下拉选择'],['radio','单选'],['checks','多选勾选']];
+function openSchema(){
+  const saved=(()=>{try{return JSON.parse(localStorage.getItem(SCHEMA_KEY)||'null')}catch(e){return null}})();
+  schemaBuf=saved?deepClone(saved):{sets:deepClone(FSETS)};
+  if(!schemaTab||!schemaBuf.sets[schemaTab]) schemaTab=curType;
+  renderSchema();
+  $('schemaMask').style.display='block';$('schemaPanel').style.display='block';
+}
+function closeSchema(){$('schemaMask').style.display='none';$('schemaPanel').style.display='none'}
+function escAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function optJoin(a){return (a||[]).join('｜')}
+function schShowIfText(f){return f.showIf?(f.showIf.f+'='+(f.showIf.has!==undefined?f.showIf.has:f.showIf.v)):''}
+function renderSchema(){
+  const T=schemaBuf.sets[schemaTab];
+  let h='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0;font-size:17px">⚙ 字段设置 — 直接改写各合同类型的填写要素</h2><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghost" onclick="schExport()">导出配置</button><button class="ghost" onclick="$(\'schImpFile\').click()">导入配置</button><input type="file" id="schImpFile" accept=".json" style="display:none" onchange="schImport(this)"><button class="ghost" onclick="schReset()">恢复默认</button><button class="primary" onclick="schSave()">保存并应用</button><button class="ghost" onclick="closeSchema()">关闭</button></div></div>';
+  h+='<div style="font-size:12px;color:#66707c;margin:8px 0 12px">修改即时生效于本面板，点击「保存并应用」后写入本机浏览器（刷新不丢，仅影响本机；导出 JSON 可发给同事在字段设置里导入）。选项用「｜」分隔；显示条件格式：<b>字段ID=选项值</b>（留空=始终显示）。</div>';
+  h+='<div class="layer-pick" style="margin-bottom:12px">'+Object.keys(schemaBuf.sets).map(k=>`<button class="${k===schemaTab?'on':''}" onclick="schTab('${k}')">${esc(schemaBuf.sets[k].name)}</button>`).join('')+'</div>';
+  h+='<div style="margin-bottom:10px"><label style="font-size:13px">类型名称：<input type="text" value="'+escAttr(T.name)+'" oninput="schBuf.sets[schemaTab].name=this.value" style="width:240px"></label></div>';
+  T.sets.forEach((s,si)=>{
+    h+='<div class="card" style="margin-bottom:12px;box-shadow:none"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><input type="text" value="'+escAttr(s.sec)+'" oninput="schBuf.sets[schemaTab].sets['+si+'].sec=this.value" style="font-weight:700;width:220px"><input type="text" value="'+escAttr(s.desc||'')+'" placeholder="章节说明（可空）" oninput="schBuf.sets[schemaTab].sets['+si+'].desc=this.value" style="flex:1"><button class="ghost" onclick="schMoveSec('+si+',-1)">↑</button><button class="ghost" onclick="schMoveSec('+si+',1)">↓</button><button class="ghost" style="color:#c01c28" onclick="schDelSec('+si+')">删节</button></div>';
+    s.fields.forEach((f,fi)=>{
+      const isOpts=['select','radio','checks'].includes(f.t);
+      h+='<div style="border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px;background:#fafbfc"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+        '<input type="text" value="'+escAttr(f.l)+'" placeholder="字段名称" title="字段名称" oninput="schF('+si+','+fi+',\'l\',this.value)" style="width:230px">'+
+        '<select onchange="schF('+si+','+fi+',\'t\',this.value)" title="控件类型">'+FIELD_TYPES.map(t=>`<option value="${t[0]}" ${f.t===t[0]?'selected':''}>${t[1]}</option>`).join('')+'</select>'+
+        '<label style="font-size:12px"><input type="checkbox" '+(f.req?'checked':'')+' onchange="schF('+si+','+fi+',\'req\',this.checked?1:0)"> 必填</label>'+
+        '<input type="text" value="'+escAttr(f.hint||'')+'" placeholder="填写提示（可空）" oninput="schF('+si+','+fi+',\'hint\',this.value)" style="flex:1;min-width:160px">'+
+        '<button class="ghost" onclick="schMoveF('+si+','+fi+',-1)">↑</button><button class="ghost" onclick="schMoveF('+si+','+fi+',1)">↓</button><button class="ghost" style="color:#c01c28" onclick="schDelF('+si+','+fi+')">删除</button></div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'+
+        (isOpts?'<input type="text" value="'+escAttr(optJoin(f.opts))+'" placeholder="选项，用｜分隔" oninput="schOpts('+si+','+fi+',this.value)" style="flex:2;min-width:240px">':'')+
+        '<input type="text" value="'+escAttr(schShowIfText(f))+'" placeholder="显示条件：字段ID=选项值（可空）" oninput="schShowIf('+si+','+fi+',this.value)" style="flex:1;min-width:200px"></div></div>';
+    });
+    h+='<button class="ghost" onclick="schAddF('+si+')">＋ 本节添加字段</button></div>';
+  });
+  h+='<button class="primary" onclick="schAddSec()">＋ 添加章节</button>';
+  $('schemaPanel').innerHTML=h;
+}
+function schTab(k){schemaTab=k;renderSchema()}
+function schF(si,fi,prop,v){schemaBuf.sets[schemaTab].sets[si].fields[fi][prop]=v}
+function schOpts(si,fi,v){schemaBuf.sets[schemaTab].sets[si].fields[fi].opts=v.split('｜').map(x=>x.trim()).filter(Boolean)}
+function schShowIf(si,fi,v){
+  const f=schemaBuf.sets[schemaTab].sets[si].fields[fi];
+  v=v.trim();
+  if(!v){delete f.showIf;return}
+  const i=v.indexOf('=');
+  if(i<0){f.showIf={f:v};return}
+  f.showIf={f:v.slice(0,i).trim(),v:v.slice(i+1).trim()};
+}
+function schAddF(si){schemaBuf.sets[schemaTab].sets[si].fields.push({id:'custom_'+Date.now(),l:'新字段',t:'text'});renderSchema()}
+function schDelF(si,fi){if(confirm('删除该字段？其已填数据将不再显示。')){schemaBuf.sets[schemaTab].sets[si].fields.splice(fi,1);renderSchema()}}
+function schMoveF(si,fi,d){const a=schemaBuf.sets[schemaTab].sets[si].fields;const j=fi+d;if(j<0||j>=a.length)return;[a[fi],a[j]]=[a[j],a[fi]];renderSchema()}
+function schAddSec(){schemaBuf.sets[schemaTab].sets.push({sec:'新章节',desc:'',fields:[]});renderSchema()}
+function schDelSec(si){if(confirm('删除整个章节及其全部字段？')){schemaBuf.sets[schemaTab].sets.splice(si,1);renderSchema()}}
+function schMoveSec(si,d){const a=schemaBuf.sets[schemaTab].sets;const j=si+d;if(j<0||j>=a.length)return;[a[si],a[j]]=[a[j],a[si]];renderSchema()}
+function schSave(){
+  try{localStorage.setItem(SCHEMA_KEY,JSON.stringify(schemaBuf))}catch(e){toast('保存失败：浏览器存储空间不足');return}
+  for(const k in schemaBuf.sets){if(FSETS[k]){FSETS[k].name=schemaBuf.sets[k].name;FSETS[k].sets=schemaBuf.sets[k].sets}}
+  F=FSETS[curType].sets;renderTypeBar();renderSteps();renderStep();closeSchema();toast('字段设置已保存并应用');
+}
+function schReset(){
+  if(!confirm('恢复全部默认字段？当前自定义设置将被清除。'))return;
+  localStorage.removeItem(SCHEMA_KEY);
+  location.reload();
+}
+function schExport(){
+  const blob=new Blob(['\ufeff'+JSON.stringify(schemaBuf,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='法务工具箱-字段配置-'+schemaTab+'.json';a.click();URL.revokeObjectURL(a.href);
+}
+function schImport(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const c=JSON.parse(e.target.result);
+      if(!c||!c.sets)throw new Error('格式不正确（缺少 sets）');
+      schemaBuf=c;if(!schemaBuf.sets[schemaTab])schemaTab=Object.keys(c.sets)[0];
+      renderSchema();toast('配置已导入，请点击「保存并应用」');
+    }catch(err){toast('导入失败：'+err.message)}
+  };
+  r.readAsText(f,'utf-8');
+}
+
+function val(id){return D[id]||''}
+function visible(f){ if(!f.showIf) return true; const v=val(f.showIf.f); if(f.showIf.has!==undefined){return Array.isArray(v)&&v.includes(f.showIf.has)} return Array.isArray(v)?v.includes(f.showIf.v):v===f.showIf.v }
+
+function renderSteps(){
+  $('stepbar').innerHTML = F.map((s,i)=>`<button class="${i===cur?'cur':(i<cur?'done':'')}" onclick="gotoStep(${i})">${i+1}. ${s.sec}</button>`).join('') + `<button class="${cur===F.length?'cur':''}" onclick="gotoStep(${F.length})">✓ 校验与导出</button>`;
+}
+function gotoStep(i){cur=i;renderStep();renderSteps()}
+function renderStep(){
+  const b=$('stepbody');
+  if(cur===F.length){renderResult();return}
+  $('resultCard').style.display='none';
+  const s=F[cur];
+  let h=`<div class="card" style="box-shadow:none;border-style:dashed"><h2><span class="no">${cur+1}</span>${s.sec}</h2>${s.desc?`<div class="desc">${s.desc}</div>`:''}<div class="grid">`;
+  for(const f of s.fields){ if(!visible(f)) continue; h+=renderField(f); }
+  h+='</div></div>';
+  b.innerHTML=h;
+  $('nextBtn').textContent = cur===F.length-1 ? '生成校验结果' : '下一步';
+  $('draftBtn').style.display = TPL.text ? '' : 'none';
+}
+function renderField(f){
+  const req=f.req?'<span class="req">*</span>':'';
+  let inner='';
+  if(f.t==='text') inner=`<input type="text" data-f="${f.id}" value="${esc(val(f.id))}" oninput="setv('${f.id}',this.value)">`;
+  else if(f.t==='date') inner=`<input type="date" data-f="${f.id}" value="${esc(val(f.id))}" onchange="setv('${f.id}',this.value)">`;
+  else if(f.t==='number') inner=`<input type="number" data-f="${f.id}" value="${esc(val(f.id))}" oninput="setv('${f.id}',this.value)">`;
+  else if(f.t==='textarea') inner=`<textarea data-f="${f.id}" oninput="setv('${f.id}',this.value)">${esc(val(f.id))}</textarea>`;
+  else if(f.t==='select') inner=`<select data-f="${f.id}" onchange="setv('${f.id}',this.value)"><option value="">请选择</option>${f.opts.map(o=>`<option ${val(f.id)===o?'selected':''}>${o}</option>`).join('')}</select>`;
+  else if(f.t==='radio') inner=`<div class="opts">${f.opts.map(o=>`<label><input type="radio" name="${f.id}" ${val(f.id)===o?'checked':''} onchange="setv('${f.id}','${o}');refresh()"> ${o}</label>`).join('')}</div>`;
+  else if(f.t==='checks') inner=`<div class="opts">${f.opts.map(o=>`<label><input type="checkbox" ${Array.isArray(val(f.id))&&val(f.id).includes(o)?'checked':''} onchange="tog('${f.id}','${o}',this.checked);refresh()"> ${o}</label>`).join('')}</div>`;
+  const hint=f.hint?`<div class="hint">${f.hint}</div>`:'';
+  return `<div class="field"><label>${f.l}${req}</label>${inner}${hint}</div>`;
+}
+function setv(id,v){D[id]=v;saveDraft(false)}
+function tog(id,o,on){const a=Array.isArray(D[id])?D[id]:[];const i=a.indexOf(o);if(on&&i<0)a.push(o);if(!on&&i>=0)a.splice(i,1);D[id]=a;saveDraft(false)}
+function refresh(){renderStep();renderSteps();saveDraft(false)}
+function stepMove(d){
+  if(d>0){
+    if(cur<F.length){
+      const miss=F[cur].fields.filter(f=>f.req&&visible(f)&&(Array.isArray(val(f.id))?!val(f.id).length:!val(f.id)));
+      if(miss.length){toast('请先填写：'+miss.map(f=>f.l).join('、'));return}
+    }
+  }
+  cur=Math.max(0,Math.min(F.length,cur+d));
+  renderStep();renderSteps();
+}
+
+/* ---- 校验规则 ---- */
+function runChecks(){
+  const risks=[]; const push=(lv,msg)=>risks.push({lv,msg});
+  if(curType==='image'){
+    if(['独占被许可','代理'].includes(val('rightsStatus')) && val('upperAuth')!=='已附，且含可再授权条款') push('red','我方为被许可/代理方，但上层授权文件未确认"可再授权"——按制度本次合作不得提交，请先补充上层授权文件或改为自有著作权（如属实）。');
+    if(/[等及相关产品一切]/.test(val('categories'))) push('warn','授权商品类别清单含"等/相关产品"类概括表述，法务将一律退回，请逐项列明。');
+    if(['独占','排他'].includes(val('licType')) && !val('ourUse')) push('red','许可方式为'+val('licType')+'，但未说明我方是否保留自行使用——排他授权必须含我方自营例外，请补充该项。');
+    if(val('sublicensable')==='允许' && !val('sublicScope')) push('red','允许转授权但未限定范围与对象——请补充转授权范围，并确认上层授权允许转授权。');
+    if(val('channels').includes('跨境出口') && !val('crossCountries')) push('warn','含跨境出口渠道但未列明目的国，请补充，并确认我方权利覆盖该地域。');
+    if(val('territory').includes('全球') && val('rightsStatus')!=='自有著作权') push('warn','授权地域为全球而我方非原始权利人，请重点核对上层授权的地域覆盖范围。');
+    if(['保底金额+分成','纯分成'].includes(val('feeMode')) && !val('calcBase')) push('red','采用分成模式但未明确计算基数——计算基数与扣除项必须书面明确，请补充。');
+    if(val('calcBase')==='净销售额' && !val('deductions')) push('warn','计算基数为净销售额但未列明扣除项，结算时必然争议，请补充。');
+    if(val('feeMode')==='套餐加购分成' && !val('pkgFormula')) push('red','采用套餐加购分成但未提供完整计算公式（单价 × 数量口径 × 分成比例）——公式残缺法务一律退回。');
+    if(val('priorConflicts')==='') push('warn','尚未确认是否存在同一形象的在先授权，请与授权台账核对后填写。');
+    if(val('isRenew')==='续约' && !val('origNo')) push('warn','续约项目请填写原合同编号，并附原合同及履约情况。');
+    if(val('partyName') && /(品牌|工作室)$/.test(val('partyName')) && !/有限公司|股份|合伙|个体/.test(val('partyName'))) push('warn','对方名称可能为品牌代称而非注册主体全称，请与营业执照逐字核对。');
+    if(val('startDate')&&val('endDate')&&val('startDate')>=val('endDate')) push('red','授权起始日不早于截止日，请核对授权期限。');
+    if(val('auditRight')==='放弃') push('warn','放弃审计权需由管理层知悉后决策，请确认。');
+    if(Array.isArray(val('rights'))&&!val('rights').length) push('warn','尚未勾选任何授权权项，授权权项必须逐项列明。');
+    if(!val('partyMail')) push('warn','未填对方电子邮箱——合同通知条款依赖该邮箱送达，缺失将影响解除/催告通知效力。');
+    if(val('coopType')==='游戏授权'){
+      if(!val('gameType')||!val('gameName')) push('red','游戏授权未填写授权产品类别或游戏名称——授权产品是认定越权违约的核心依据，必须明确。');
+      if(!Array.isArray(val('gameContent'))||!val('gameContent').length) push('warn','尚未勾选授权内容（图库/音乐/动画素材），授权范围将与"以配套图库为准"的约定产生歧义，请逐项勾选。');
+      if(val('termRule')==='固定起止日期' && (!val('startDate')||!val('endDate'))) push('warn','期限按固定起止日期计算但未填授权起止日，请回到"授权地域与期限"补充。');
+      if(!val('devEnd')||!val('launchDeadline')) push('warn','开发期截止日或上线截止日未填——模板约定"逾期上线视为违约且费用不退"，时限必须书面明确。');
+      if(Array.isArray(val('opChannels'))&&val('opChannels').includes('全渠道全平台')&&!val('opChannels').includes('特定渠道（注明）')&&(Array.isArray(val('channels'))&&val('channels').length&&val('channels').some(c=>['跨境出口'].includes(c)))) push('warn','运营渠道为全渠道全平台而销售渠道含跨境出口，请确认我方权利与授权地域覆盖海外上线。');
+      if(Array.isArray(val('approvalFlow'))&&!val('approvalFlow').includes('上线产品与审批版本一致')) push('warn','审批流程未勾选"上线产品与审批版本一致"——上线版本与送审版本不一致是该类合同最高发的违约情形，建议补充。');
+      if(!Array.isArray(val('compliance'))||!val('compliance').includes('取得游戏版号')) push('warn','未勾选"取得游戏版号"合规要求——未取得版号上线的法律责任与解约风险应由对方承担，建议明确。');
+      if(val('thirdPartyLimit')==='未约定') push('red','未约定第三方元素限制——对方使用第三方音乐/商标/字体引发纠纷可能牵连我方 IP，必须约定由对方自行取得许可。');
+      if(Array.isArray(val('ipSplit'))&&!val('ipSplit').includes('卡通形象及素材著作权完全归我方')) push('warn','知识产权划分未明确"卡通形象及素材著作权完全归我方"，存在权利被稀释风险，建议补充。');
+      if(val('oemRule')==='允许（范围说明）'&&!val('oemNote')) push('red','允许代工开发但未说明范围与管控要求——模板要求书面同意+资质文件+补充协议+另开授权书，请补充说明。');
+    }
+  } else if(curType==='press'){
+    if(val('derivativeReserve')==='未确定') push('red','衍生品开发权利归属"未确定"——衍生权利未书面保留极易被出版社一并主张，必须明确"我方保留"。');
+    if(val('derivativeReserve')==='一并授权出版社') push('red','衍生品权利一并授权出版社将影响后续 IP 商业化，原则上不允许，如业务确需请先取得分管负责人书面同意并联系法务。');
+    if(val('payMode')==='版税' && !val('royaltyRate')) push('warn','采用版税但未填版税率，请补充（可按印数阶梯）。');
+    if(val('payMode')==='版税' && !val('royaltyBase')) push('red','采用版税但未明确计算基数（定价×印数/实销）——结算争议高发点，必须约定。');
+    if(val('grantRights') && Array.isArray(val('grantRights')) && (val('grantRights').includes('信息网络传播权')||val('grantRights').includes('改编权'))) push('warn','授予了信息网络传播权/改编权——该模板授权范围仅为纸质图书出版发行，扩大权项请确认对价与法务意见。');
+    if(val('reservedNote')==='未约定') push('red','未授权形式（电子/有声/期刊）未作保留声明——未书面保留的权利存在被主张的风险，必须约定。');
+    if(val('sublicensable')==='允许（范围列明）' && !val('sublicNote')) push('red','允许转授权但未列明范围——请补充，并确认仅限实现出版目的的必要限度。');
+    if(val('jurisdiction')==='原告所在地人民法院' && !val('signPlace')) push('warn','管辖为"原告所在地法院"时，签订地为我方所在地的意义在于固定我方先诉的便利，请确认签订地已填写。');
+    if(val('capRights')==='已付款项的 20%' || val('capPersonal')==='已付款项的 20%') push('warn','赔偿上限为已付款项 20%，高于基准（0%–10%），请确认已经法务确认。');
+    if(val('invoiceOrder')==='先付款后开票') push('warn','先付款后开票与我方资金风险管控不符，建议争取"先开票后付款"。');
+    if(val('pubQualify')==='待核验') push('warn','出版社出版经营资格尚未核验，请核对出版许可证。');
+    if(val('antiFake')==='是（封底均需粘贴，生产量与防伪码对应）' && !val('antiFakePrice')) push('warn','采用防伪标但未填写单价，防伪标成本将无法核算，请补充。');
+    if(val('buyback')==='其他（说明）' && !val('buybackOther')) push('warn','库存处理选择"其他"但未说明，请补充具体安排。');
+    if(val('auditRight')==='放弃') push('warn','放弃审计权需由管理层知悉后决策。');
+  } else if(curType==='license'){
+    if(val('exclusivity')==='独占'||val('exclusivity')==='排他'){ if(!val('ourUse')||val('ourUse')==='不适用') push('red','授权性质为'+val('exclusivity')+'，但未明确我方自营例外——必须保留我方使用权。'); }
+    if(val('sublicensable')==='允许' && !val('sublicScope')) push('red','允许转授权但未限定范围与对象——请补充。');
+    if(val('reclaim')==='未约定') push('red','未约定逾期未出版的回收权——出版公司拿了授权不出书，权利将被长期占用，必须约定解除与回收机制。');
+    if(val('noReg')==='未约定') push('warn','未约定禁止对方以作品元素注册商标/版权/专利，存在抢注风险。');
+    if(!val('reservedRights')) push('red','未填写未授权权利保留声明——未书面保留的权利（影视/游戏/周边等）存在被主张的风险。');
+    if(val('partyScope')!=='是（已核对）') push('warn','尚未核对对方经营范围是否含图书策划/出版物经营许可。');
+    if(val('termStart')&&val('termEnd')&&val('termStart')>=val('termEnd')) push('red','授权起始日不早于截止日，请核对授权期限。');
+    if(val('payMode')==='版税' && !val('royaltyBase')) push('red','采用版税但未明确计算基数（定价×印数/实销），请补充。');
+    if(val('auditRight')==='放弃') push('warn','放弃审计权需由管理层知悉后决策。');
+  }
+  return risks;
+}
+
+function renderResult(){
+  $('nextBtn').textContent='返回修改';
+  const risks=runChecks();
+  const reds=risks.filter(r=>r.lv==='red'), warns=risks.filter(r=>r.lv==='warn');
+  let rb='';
+  if(!reds.length&&!warns.length) rb='<div class="risk" style="background:var(--green-weak);border:1px solid #bcd9c1;color:var(--green)"><b>✔ 校验通过</b>：未发现红线或预警项，可导出申请表。</div>';
+  for(const r of reds) rb+=`<div class="risk red"><b>【红线】</b>${esc(r.msg)}</div>`;
+  for(const r of warns) rb+=`<div class="risk warn"><b>【预警】</b>${esc(r.msg)}</div>`;
+  $('riskbox').innerHTML=rb;
+  let ab='';
+  reds.forEach((r,i)=>{ const k='r'+i; ab+=`<div class="risk red ack"><label><input type="checkbox" ${acks[k]?'checked':''} onchange="acks['${k}']=this.checked;renderResult()"> 我已知悉上述红线并已在"需法务重点提示的事项"中书面说明（勾选后方可导出）</label></div>`});
+  $('ackbox').innerHTML=ab;
+  const allAcked = reds.every((r,i)=>acks['r'+i]);
+  $('dlBtn').disabled = reds.length>0 && !allAcked;
+  $('resultCard').style.display='block';
+  $('preview').innerHTML=buildFormHTML();
+  $('resultCard').scrollIntoView({behavior:'smooth'});
+}
+
+/* ---- 申请表生成 ---- */
+function buildFormHTML(){
+  let h='<h2 style="text-align:center;margin-bottom:4px">'+FSETS[curType].name+'合同 · 商业信息提供清单（申请表）</h2><p style="text-align:center;color:#66707c;font-size:12px;margin-bottom:14px">配套对应合同模板使用 ｜ 填报时点：发起合同审核前</p>';
+  const risks=runChecks();
+  if(risks.length) h+='<p style="font-size:12px;color:#c01c28;margin-bottom:10px">▲ 本表生成时存在未解决提示项，详见"校验与自查说明"。</p>';
+  for(const s of F){
+    const rows=s.fields.filter(visible).map(f=>{
+      let v=val(f.id);
+      if(Array.isArray(v)) v=v.join('、');
+      return `<tr><th>${esc(f.l)}</th><td>${esc(v)||'<span style="color:#98a2b3">（未填写）</span>'}</td></tr>`;
+    }).join('');
+    if(rows) h+=`<table class="summary-table"><caption style="caption-side:top;text-align:left;font-weight:700;padding:10px 0 6px">${esc(s.sec)}</caption>${rows}</table>`;
+  }
+  h+='<table class="summary-table"><caption style="caption-side:top;text-align:left;font-weight:700;padding:14px 0 6px">校验与自查说明</caption>';
+  const reds=risks.filter(r=>r.lv==='red'),warns=risks.filter(r=>r.lv==='warn');
+  h+=`<tr><th>红线项</th><td>${reds.length?reds.map(r=>'【红线】'+esc(r.msg)).join('<br>'):'无'}</td></tr>`;
+  h+=`<tr><th>预警项</th><td>${warns.length?warns.map(r=>'【预警】'+esc(r.msg)).join('<br>'):'无'}</td></tr>`;
+  h+=`<tr><th>需法务重点提示</th><td>${esc(val('legalNotes'))||'—'}</td></tr></table>`;
+  if(TPL.text&&TPL.scan.length){
+    h+='<table class="summary-table"><caption style="caption-side:top;text-align:left;font-weight:700;padding:14px 0 6px">模板待补项清单（上传模板扫描）</caption><tr><td>'+TPL.scan.map(s=>'第'+s.line+'行附近：'+esc(s.snippet)).join('<br>')+'</td></tr></table>';
+  }
+  h+='<p style="font-size:12px;color:#66707c;margin-top:12px">归档时与合同正本一并保存；本表内容将作为合同要素抽取与授权台账登记的数据来源。</p>';
+  return h;
+}
+function downloadForm(){downloadWord(buildFormHTML(),FSETS[curType].name+'合同商业信息提供清单（申请表）');toast('Word 申请表已下载')}
+function draftKey(){return 'lcform_'+curType}
+function saveDraft(show){try{localStorage.setItem(draftKey(),JSON.stringify({D,acks}))}catch(e){} if(show)toast('草稿已保存（浏览器本地）')}
+function loadDraft(){try{const s=JSON.parse(localStorage.getItem(draftKey())||'null')||JSON.parse(localStorage.getItem('lcform')||'null');if(s){D=s.D||{};Object.assign(acks,s.acks||{})}}catch(e){}}
+(function initForm(){try{const s=JSON.parse(localStorage.getItem(draftKey())||'null');if(s){D=s.D||{};Object.assign(acks,s.acks||{})}}catch(e){}})();
+
+/* ---- 合同模板上传与初稿生成 ---- */
+let TPL={text:null,name:null,scan:[]};
+function onTplFile(input){
+  const f=input.files[0]; if(!f)return;
+  $('tplname').textContent=f.name;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      if(/\.txt$/i.test(f.name)){ TPL.text=e.target.result; }
+      else{
+        if(typeof mammoth==='undefined'){toast('docx 解析组件加载失败（网络原因），请改传 .txt 版模板');return}
+        const r=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        TPL.text=r.value;
+      }
+      TPL.name=f.name; TPL.scan=scanPlaceholders(TPL.text);
+      renderScan();
+      if($('stepbody').innerHTML) renderStep();
+      toast('模板已解析：发现 '+TPL.scan.length+' 处待补项');
+    }catch(err){toast('解析失败：'+err.message)}
+  };
+  reader.readAsArrayBuffer(f);
+}
+function scanPlaceholders(text){
+  const out=[]; const lines=text.split(/\n+/);
+  const pats=[/【\s*】/,/[（(]\s*[)）]/,/[:：]\s*。/,/为\s*。/,/按\s*。/];
+  lines.forEach((ln,i)=>{
+    for(const p of pats){
+      if(p.test(ln)){ out.push({line:i+1,snippet:ln.trim().slice(0,60)}); break; }
+    }
+  });
+  return out;
+}
+function renderScan(){
+  const box=$('tplscan');
+  if(!TPL.scan.length){box.innerHTML='<div class="risk" style="background:var(--green-weak);border:1px solid #bcd9c1;color:var(--green)">✔ 未发现明显占位符/残句，模板完整。</div>';return}
+  box.innerHTML='<div class="risk warn"><b>模板待补项 '+TPL.scan.length+' 处</b>（生成初稿时将高亮保留，需法务签署前补齐）：</div>'+TPL.scan.map(s=>'<div class="scanitem">第 '+s.line+' 行附近：'+esc(s.snippet)+'</div>').join('');
+}
+function regionText(){
+  const t=val('territory'); const arr=Array.isArray(t)?t.slice():[];
+  if(arr.includes('特定国家/地区')&&val('specTerritory')){arr[arr.indexOf('特定国家/地区')]='特定国家/地区（'+val('specTerritory')+'）'}
+  return arr.join('、')||'【授权地域】';
+}
+function highlight(text){
+  return esc(text)
+    .replace(/【[^】]*】/g,m=>'<mark class="ph">'+m+'</mark>')
+    .replace(/[（(]\s*[)）]/g,m=>'<mark class="ph">'+m+'</mark>');
+}
+function applyFieldFill(text){
+  // 乙方信息块
+  text=text.replace(/^乙方[:：]?\s*$/m,'乙方：'+val('partyName'));
+  let partyFilled=false;
+  text=text.replace(/^统一社会信用代码[:：]?\s*$/m,()=>{ if(!partyFilled&&val('partyCode')){partyFilled=true;return '统一社会信用代码：'+val('partyCode')} return '统一社会信用代码：'});
+  text=text.replace(/^地址[:：]?\s*$/m,(m,off,s)=>{ const before=s.slice(0,off); if(/乙方/.test(before.slice(-200))) return '地址：'+val('partyAddr'); return m });
+  text=text.replace(/^经办人[:：]?\s*$/m,'经办人：'+val('partyContact'));
+  // 日期区间
+  text=text.replace(/自【[^】]*】年【[^】]*】月【[^】]*】日[^，。；\n]*至【[^】]*】年【[^】]*】月【[^】]*】日/,
+    ()=> '自'+fmtDate(val('startDate'))+'起至'+fmtDate(val('endDate'))+'止');
+  // 授权书单日期
+  let usedStart=false;
+  text=text.replace(/自【[^】]*】年【[^】]*】(月)?【[^】]*】日/g,()=> usedStart?('至'+fmtDate(val('endDate'))):(usedStart=true,'自'+fmtDate(val('startDate'))));
+  // 通用商务字段
+  if(curType==='image'){
+    text=text.replace(/许可区域（授权区域）[:：][^\n。]*/,'许可区域（授权区域）：'+regionText());
+    text=text.replace(/销售渠道[:：][^\n]*/,'销售渠道：'+(Array.isArray(val('channels'))?val('channels').join('、'):'【销售渠道】'));
+    text=text.replace(/结算方式为[。。\s]*$/m,'结算方式为'+(val('settleCycle')||'【结算方式】')+'。');
+    text=text.replace(/计算公式为[^\n。]*/,'计算公式为'+(val('pkgFormula')||val('pkgPrice')?('套餐单价 '+val('pkgPrice')+' 元 × 加购数量 × 分成比例'):'【分成计算公式】'));
+    text=text.replace(/每逾期一日按(支付违约金)?/,'每逾期一日按'+(val('overduePenalty')||'【违约金标准】')+'支付违约金');
+    text=text.replace(/^领权方[:：]?\s*$/m,'领权方：'+val('partyName'));
+    text=text.replace(/^授权区域[:：]?\s*$/m,'授权区域：'+regionText());
+    text=text.replace(/将授权内容在(上使用)/,'将授权内容在'+(val('categories')||'【授权范围】')+'上使用');
+    if(val('paymentInvoice')) text=text.replace(/增值税专用发票，税率为【6%】/,'增值税专用发票（'+val('paymentInvoice')+'）');
+  }
+  if(curType==='press'){
+    if(val('pressName')) text=text.replace(/^乙\s*方[:：]\s*$/m,'乙方：'+val('pressName'));
+    if(val('deliverDate')) text=text.replace(/于[\d\s年月日]*前将全部作品成稿交付乙方/,'于 '+fmtDate(val('deliverDate'))+' 前将全部作品成稿交付乙方');
+    if(val('royaltyRate')) text=text.replace(/版税率[:：]?\s*统一为\s*[\d.]+\s*%?/,'版税率：统一为 '+(parseFloat(val('royaltyRate'))||val('royaltyRate'))+'%');
+    if(val('minPrint')) text=text.replace(/单本印数保底[\d,，\s]*册/,'单本印数保底 '+val('minPrint')+' 册');
+    if(val('clearMonths')) text=text.replace(/给予乙方\s*\d+\s*个自然月的清货期/,'给予乙方 '+(parseInt(val('clearMonths'),10)||val('clearMonths'))+' 个自然月的清货期');
+    if(val('grantYears')) text=text.replace(/后满\s*\d+\s*年，授权期内/,'后满 '+(parseInt(val('grantYears'),10)||val('grantYears'))+' 年，授权期内');
+    if(val('jurisdiction')==='我方所在地人民法院') text=text.replace(/提交原告所在地人民法院诉讼解决/,'提交甲方所在地人民法院诉讼解决');
+    if(val('jurisdiction')==='对方所在地人民法院') text=text.replace(/提交原告所在地人民法院诉讼解决/,'提交乙方所在地人民法院诉讼解决');
+    if(val('jurisdiction')==='仲裁（机构注明）') text=text.replace(/提交原告所在地人民法院诉讼解决/,'提交'+(val('jurisdictionOther')||'【仲裁机构】')+'仲裁解决');
+  }
+  if(curType==='image'&&val('coopType')==='游戏授权'){
+    let termUsed=false;
+    text=text.replace(/自[_\d\s年月日]+起到[_\d\s年月日]+止/g,()=>{ if(!termUsed){termUsed=true;return '自 '+fmtDate(val('startDate')||val('devStart'))+' 起至 '+fmtDate(val('endDate')||val('devEnd'))+' 止'} return '自 '+fmtDate(val('devStart'))+' 起至 '+fmtDate(val('devEnd'))+' 止'});
+    if(val('mgAmount')) text=text.replace(/含税总金额为\s*[\d,，\s]*\s*元/,'含税总金额为 '+val('mgAmount')+' 元');
+    if(val('territory')) text=text.replace(/授权区域[:：][^\n]*/,'授权区域：'+regionText());
+    if(val('licType')) text=text.replace(/授权性质[:：][^\n]*/,'授权性质：'+(val('licType')==='独占'?'独家授权':'非独家授权')+(val('sublicensable')==='禁止'?'，不可转授权':'，可转授权（范围：'+(val('sublicScope')||'另行书面约定')+'）'));
+    if(val('opChannels')) text=text.replace(/授权产品运营渠道[:：][^\n]*/,'授权产品运营渠道：'+val('opChannels').join('、'));
+  }
+  return text;
+}
+function renderContractHTML(text){
+  const htmlLines=text.split(/\n+/).map(l=>{
+    if(!l.trim())return'';
+    const isTitle=/^(形象授权许可协议|卡通形象授权许可使用合同|图书出版合同|授\s*权\s*书)$/.test(l.trim());
+    return '<p'+(isTitle?' style="text-align:center;font-weight:bold;font-size:16px"':'')+'>'+highlight(l)+'</p>';
+  }).join('');
+  return htmlLines;
+}
+function buildDraftHTML(){
+  const text=applyFieldFill(TPL.text);
+  const undone=TPL.scan.length;
+  let head='<p style="text-align:center;font-weight:bold;font-size:16px">'+FSETS[curType].name+'合同（初稿·机器辅助生成）</p>';
+  head+='<p style="font-size:11px;color:#8a6d00;background:#fffbe6;padding:6px 10px;border-radius:6px">⚠ 本初稿由填报信息按模板自动代入，黄色高亮处为模板原有占位符或未能自动代入的内容，须经法务审核修改后方可对外发送；未上传模板的待补项以申请表为准。</p>';
+  if(undone) head+='<p style="font-size:11px;color:#66707c;margin-bottom:8px">模板扫描待补项 '+undone+' 处（详见申请表《模板待补项清单》）。</p>';
+  return head+renderContractHTML(text);
+}
+/* ---- 对方模板参考：快速形成我方模板 ---- */
+let REF={text:null,name:null,terms:[]};
+function standardFlips(text){
+  text=text.replace(/独家授权|独占授权/g,'【非独家授权】');
+  text=text.replace(/排他授权/g,'【非独家授权】');
+  text=text.replace(/(?<![不非])可转授权|可以转授权|有权转授权/g,'【不可转授权（经甲方书面同意的除外）】');
+  text=text.replace(/向([^，。；\n]{0,14}?)人民法院(提起诉讼|起诉|诉讼|解决)/g,(m,c,a)=>c.indexOf('甲方')>=0?m:'【向甲方所在地人民法院'+a+'】');
+  text=text.replace(/提交([^，。；\n]{0,14}?)人民法院/g,(m,c)=>c.indexOf('甲方')>=0?m:'【提交甲方所在地人民法院】');
+  return text;
+}
+function extractTerms(text){
+  const t=[];const push=(k,v)=>{if(v)t.push({k,v})};let m;
+  push('许可方式', /非独家|非独占|普通许可/.test(text)?'对方模板表述为非独家/普通许可（可保留）':/独家授权|独占|排他/.test(text)?'对方模板要求独家/独占/排他——需按我方立场改为非独家':'未发现明确表述（需补充）');
+  push('转授权', /不可转授权|不得转授权|未经.{0,6}书面同意.{0,10}转授权/.test(text)?'已限制转授权（可保留）':/可转授权|可以转授权|有权转授权/.test(text)?'对方模板允许转授权——需限定范围或禁止':'未发现转授权表述（需补充）');
+  if(m=text.match(/含税总?金额为\s*([\d,，\s]+)\s*元/)) push('保底/授权费金额', m[1].replace(/[，,]/g,'').trim()+' 元（含税）');
+  else if(m=text.match(/([\d,，]{4,})\s*元/)) push('金额（首处）', m[1]+' 元——请人工核对全部金额条款');
+  if(m=text.match(/税率\s*[:：]?\s*(\d+(?:\.\d+)?)\s*%/)) push('税率', m[1]+'%');
+  if(m=text.match(/中国大陆|全球|中华人民共和国境内|中国境内/)) push('授权区域', m[0]);
+  if(m=text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日[^，。\n]{0,8}(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/)) push('期限区间', m[0].slice(0,50));
+  else if(m=text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/)) push('日期（首处）', m[0]);
+  if(m=text.match(/[^\s。；\n]{0,12}违约金[^\s。；\n]{0,25}/g)) push('违约金条款', m.slice(0,3).join('；'));
+  if(m=text.match(/全渠道|京东|抖音|淘宝|天猫|拼多多|线下门店|门店|电商/g)) push('渠道关键词', [...new Set(m)].slice(0,8).join('、'));
+  if(m=text.match(/仲裁委员会|仲裁机构|人民法院/)) push('争议解决', m[0]);
+  if(/防伪|镭射/.test(text)) push('防伪条款','对方模板含防伪/镭射标相关条款，请核对单价与赔偿标准');
+  if(/版税|稿酬|印数/.test(text)) push('出版结算','对方模板含版税/稿酬/印数条款，请核对计算基数');
+  return t;
+}
+function renderRef(){
+  const box=$('refscan');
+  if(!REF.text){box.innerHTML='';$('refFillBtn').style.display='none';$('refDraftBtn').style.display='none';return}
+  let h='<div class="risk warn"><b>已解析对方模板</b>，提取到 '+REF.terms.length+' 类关键要素：</div>';
+  h+='<table class="summary-table">'+REF.terms.map(t=>'<tr><th style="width:120px">'+esc(t.k)+'</th><td>'+esc(t.v)+'</td></tr>').join('')+'</table>';
+  h+='<div style="font-size:12px;color:#66707c;margin-top:6px">提取结果仅供加速定位，逐项核对责任仍在填报人；"带入填报"只填可识别项，已有草稿数据不会被清除。</div>';
+  box.innerHTML=h;
+  $('refFillBtn').style.display='';$('refDraftBtn').style.display='';
+}
+function onRefFile(input){
+  const f=input.files[0];if(!f)return;
+  $('refname').textContent=f.name;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      if(/\.txt$/i.test(f.name)){ REF.text=e.target.result; }
+      else{
+        if(typeof mammoth==='undefined'){toast('docx 解析组件加载失败（网络原因），请改传 .txt 版模板');return}
+        const r=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        REF.text=r.value;
+      }
+      REF.name=f.name; REF.terms=extractTerms(REF.text);
+      renderRef();
+      toast('对方模板已解析：提取 '+REF.terms.length+' 类要素');
+    }catch(err){toast('解析失败：'+err.message)}
+  };
+  reader.readAsArrayBuffer(f);
+}
+function refFill(){
+  const t=REF.text||'';
+  if(/非独家|非独占|普通许可/.test(t)) setv('licType','普通');
+  if(/不可转授权|不得转授权/.test(t)) setv('sublicensable','禁止');
+  const m=t.match(/含税总?金额为\s*([\d,，\s]+)\s*元/);
+  if(m) setv('mgAmount', m[1].replace(/[，,]/g,'').trim());
+  const r=t.match(/税率\s*[:：]?\s*(\d+(?:\.\d+)?)\s*%/);
+  if(r) setv('paymentInvoice','增值税专用发票，税率 '+r[1]+'%，含税');
+  if(/中国大陆/.test(t)&&!/港澳台|全球/.test(t)) setv('territory',['中国大陆']);
+  const ds=t.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/g);
+  if(ds&&ds.length>=2){
+    const p=s=>{const a=s.match(/\d+/g);return a[0]+'-'+a[1].padStart(2,'0')+'-'+a[2].padStart(2,'0')};
+    setv('startDate',p(ds[0]));setv('endDate',p(ds[ds.length-1]));
+  }
+  cur=0;renderStep();renderSteps();saveDraft(false);
+  toast('已带入可识别要素，请逐项核对（提取明细见参考卡片）');
+}
+function buildRefDraftHTML(){
+  const text=applyFieldFill(standardFlips(REF.text));
+  let head='<p style="text-align:center;font-weight:bold;font-size:16px">我方模板初稿（基于对方模板转换）</p>';
+  head+='<p style="font-size:11px;color:#8a6d00;background:#fffbe6;padding:6px 10px;border-radius:6px">⚠ 本初稿由对方模板自动转换：已按我方标准立场将许可方式/转授权/管辖替换为非独家、不可转授权、甲方所在地法院并<b>标黄</b>；黄色高亮还包括未能代入的占位符。<b>使用前必须逐条核对双方权利义务方向、违约金体系与我方制度一致，经法务审核后方可作为我方模板对外发送。</b></p>';
+  return head+renderContractHTML(text);
+}
+function downloadRefDraft(){
+  if(!REF.text){toast('请先上传对方模板');return}
+  const html=buildRefDraftHTML();
+  downloadWord(html,'我方模板初稿（基于对方模板·待法务核对）');
+  $('refout').innerHTML='<div class="sec-title">我方模板初稿预览</div><div class="draftbox">'+html+'</div>';
+  toast('我方模板初稿已生成（标准立场已标黄替换，须法务逐条核对）');
+}
+function downloadDraft(){
+  if(!TPL.text){toast('请先上传合同模板');return}
+  const html=buildDraftHTML();
+  downloadWord(html,FSETS[curType].name+'合同初稿（待法务审核）');
+  $('draftout').innerHTML='<div class="sec-title">合同初稿预览</div><div class="draftbox">'+html+'</div>';
+  toast('合同初稿已生成下载（黄色高亮为待补项）');
+}
+
+/* ============ 模块二：审核要点 ============ */
+const LAYERS={
+ business:{name:'业务初审',intro:'一审对商业真实性与信息完整性负责，不做条款合法性判断。标准时限 2 个工作日。',items:[
+  {n:'申请表完整性',f:'《商业信息提供清单》已完整填写并附齐全部附件',red:'必填项空缺或附件不齐，一审不予通过'},
+  {n:'主体一致性',f:'对方主体信息与营业执照一致，无简称、代称签署情形',red:'主体名称与营业执照不一致'},
+  {n:'商务授权范围',f:'商务条件（费用/比例/期限）未超出业务授权范围，超出的已取得分管负责人书面同意',red:'超出授权范围且无书面同意'},
+  {n:'在先授权冲突',f:'已与内部授权台账核对，同一形象/作品不存在未披露的在先授权冲突',red:'存在未披露的在先授权冲突'},
+  {n:'产品企划核对',f:'对方产品企划案与拟授权商品类别逐项核对一致'},
+ ],scripts:[
+  ['补材料通知','这份申请还缺两项：① 对方盖公章的营业执照复印件；② 分年度销售预估表。按制度一审材料齐了才进法务，补齐后我这边当天转下一层级。'],
+  ['冲突预警','我们查了授权台账，这个形象去年已经给 A 公司做了同类目的衍生品授权，范围是普通许可。所以这次只能按普通许可谈，对方如果要独占，需要先和 A 公司的合同做冲突排查，这个要法务介入。'],
+  ['向上请示','这次对方给的条件超出我们部门的商务授权范围（保底金额超出 X%），需要分管领导先书面同意，我们再发起合同审核流程。'],
+ ]},
+ legal:{name:'法务审核',intro:'二审对合法合规与权利风险负责。标准时限 3 个工作日（复杂合同 5 个）。',items:[
+  {n:'主体资格',f:'营业执照、经营资质、签署人授权文件齐备；境外主体需公证认证文件',red:'主体不适格一律否决'},
+  {n:'合同效力',f:'生效条件、签署页要件、骑缝章、附件清单与正文一致',red:'附件缺失不得签发'},
+  {n:'陈述与保证',f:'双方权利保证、无重大诉讼/处罚披露',red:'必须含权利瑕疵担保条款'},
+  {n:'违约责任',f:'违约金标准、损失赔偿范围、单方解除权',red:'不得低于法定可主张范围'},
+  {n:'争议解决',f:'管辖约定（争取我方所在地）、仲裁条款有效性',red:'域外仲裁需专项审批'},
+  {n:'通知与送达',f:'送达地址、电子送达效力明确'},
+  {n:'权利链',f:'我方是否原始权利人；被许可/代理情形下上层授权允许再授权且覆盖本次合作',red:'权利链断裂不得签约'},
+  {n:'授权权项',f:'著作财产权逐项列明；"商品化权"与著作权权项对应',red:'"等/相关一切权利"式概括授权一律修改'},
+  {n:'许可方式',f:'独占/排他/普通定义确切；独占时我方保留使用权的例外',red:'排他必须含我方自营例外'},
+  {n:'转授权',f:'范围与对象明确；主合同终止后转授权传导终止',red:'无限制转授权一律否决'},
+  {n:'授权商品类别',f:'逐项列明并与产品企划案核对',red:'禁止"等/相关产品"概括表述'},
+  {n:'地域与线上销售',f:'地域界定、跨境出口、线上无地域销售的越区处理'},
+  {n:'期限与清货',f:'起止日、宽限期、清货期及费用'},
+  {n:'合作产出归属',f:'共同开发作品、衍生设计的著作权归属与使用',red:'归属不明一律修改'},
+  {n:'侵权与维权',f:'双方维权分工、费用承担、对方协助义务'},
+  {n:'权利瑕疵担保',f:'对方（若为授权方）保证无权利瑕疵并承担追偿'},
+  {n:'竞品与冲突',f:'独占/排他对在先授权与我方自营业务的影响'},
+  {n:'条款引用有效性',f:'"按第 X 条约定/规定"的引用是否真实存在对应内容（断链检查）',red:'空引用一律修改'},
+  {n:'违约责任对等性',f:'甲方违约责任是否整条空白；"视为重大违约"是否指向明确后果条款；双方违约金体系是否闭环'},
+  {n:'附件一致性（授权书）',f:'授权书的领权方/区域/范围/期限与主合同一致且无空白字段',red:'授权书空白不得用印'},
+  {n:'版权标示与署名',f:'© 标注格式在合同各条款间一致（如"©+主体全称"）'},
+  {n:'终止后处理',f:'清货/库存处理安排、授权资料销毁归还'},
+ ],scripts:[
+  ['退回话术（红线项）','合同第 X 条约定的是『……』，属于概括式授权，一旦发生争议，实际授权范围由对方解释，公司可能超出预期范围丧失权利。建议改为逐项列明：……。按制度这一项不改不能进入下一层级。'],
+  ['黄项沟通','第 X 条目前没有约定……，属于可争取的空白点。建议补充为『……』；如果对方不接受，需要书面说明理由留档，由审批层知悉后决策。'],
+  ['解释话术（为什么不能签独占）','对方要的是独占授权，意味着我们自己也不能在同类产品上使用这个形象。目前我们的自营品类里有……，会直接受限。建议改为排他 + 我方自营例外，既保住对方的市场独占预期，也不影响我们自己的业务。'],
+  ['否决理由（升级管理层）','本合同存在 X 项红线问题（列明条款），按《合同审核层级审查要点表》不予通过。主要风险：……。如业务上确需推进，需管理层书面决策并承担相应风险敞口。'],
+ ]},
+ finance:{name:'财务审核',intro:'三审对资金与税务风险负责。标准时限 2 个工作日。先做占位符扫描：金额、比例、日期、结算方式留空一律红项。',items:[
+  {n:'模板完整性（占位符）',f:'结算方式、分成公式、金额、比例、日期无【】空白与残句',red:'金额/比例/日期/结算方式空白一律红项'},
+  {n:'价款与币种',f:'金额大小写一致、币种明确、含税/不含税注明',red:'金额或税负表述歧义一律退回'},
+  {n:'支付节点',f:'付款条件与履约里程碑绑定',red:'不得接受无对价预付大额款项'},
+  {n:'付款方式',f:'对公转账，收款账户与签约主体一致',red:'收款账户≠签约主体一律否决'},
+  {n:'发票',f:'类型、税率、开票时点与付款顺序；发票品目与业务实质核对（授权许可费→现代服务业 6%）；双方开票信息齐备性'},
+  {n:'保底（MG）',f:'金额、支付节点、未达保底时的补足机制'},
+  {n:'分成结算',f:'计算基数、扣除项书面明确、阶梯比例无歧义',red:'计算基数或扣除项不明一律修改'},
+  {n:'对账与审计权',f:'结算周期、对方报表内容、我方审计权及费用承担'},
+  {n:'保证金/定金',f:'金额、退还条件、抵扣顺序'},
+  {n:'客户信用',f:'对方付款历史、履约能力佐证'},
+  {n:'逾期违约金',f:'标准与起算点明确；我方保留中止履约权'},
+  {n:'无保底的应收管理',f:'纯分成/套餐加购模式下：报表报送时点、对账单确认机制、逾期违约金标准',red:'结算方式或公式空白为红项'},
+  {n:'汇率（跨境）',f:'结算币种、汇率风险承担'},
+  {n:'税费承担',f:'各税种承担方；跨境合同代扣代缴安排',red:'代扣代缴责任不明一律退回'},
+  {n:'收入确认',f:'授权费/分成/版税的收入确认时点符合会计准则'},
+  {n:'发票合同一致性',f:'品名、金额、主体与合同一致',red:'不一致不得付款'},
+  {n:'预算与资金',f:'合同支出在年度预算内；付款计划与现金流匹配'},
+ ],scripts:[
+  ['修改后签署','第 X 条分成计算基数为『销售额』，未定义扣除项，退货、渠道折扣是否扣除无法确定，结算时必然产生争议。建议明确为『净销售额，指……，扣除退货、增值税及渠道佣金』。'],
+  ['红线否决','第 X 条约定款项支付至合同外的第三方账户，与签约主体不一致，存在资金风险与税务合规问题，财务审核不予通过。请业务确认对方账户变更的书面依据，并改由签约主体收款。'],
+  ['对账与审计','建议在结算条款中加入：乙方应于每季度结束后 15 日内提供分渠道销售明细，甲方有权每年度审计一次，抽查费用由甲方自理、查实差异超过 5% 时由乙方承担。这样对双方都是保护。'],
+  ['管理层风险提示','本合同为纯分成模式且无保底，若对方首年销售未达预期，公司该 IP 本年度授权收入可能为零，但设计支持与监查成本照常发生，预估投入约 ……。请决策是否要求设置最低保底。'],
+ ]},
+ approval:{name:'审批层',intro:'审批层不重复业务/法务/财务审查，使用一页纸摘要做商业决策。',items:null,scripts:[]},
+};
+
+let curLayer='legal';
+const judgeState={};
+let customScripts={};
+try{customScripts=JSON.parse(localStorage.getItem('lcscripts')||'{}')}catch(e){customScripts={}}
+function allScripts(layerKey){return (LAYERS[layerKey].scripts||[]).concat(customScripts[layerKey]||[])}
+function addScript(){
+  const t=$('nsTitle').value.trim(), c=$('nsBody').value.trim();
+  if(!t||!c){toast('请填写话术标题和内容');return}
+  (customScripts[curLayer]=customScripts[curLayer]||[]).push({t,c});
+  localStorage.setItem('lcscripts',JSON.stringify(customScripts));
+  renderLayerBody(); toast('话术已添加');
+}
+function delScript(i){
+  if(!confirm('删除这条自定义话术？'))return;
+  customScripts[curLayer].splice(i,1); localStorage.setItem('lcscripts',JSON.stringify(customScripts)); renderLayerBody();
+}
+function pickLayer(k){curLayer=k;renderLayers();renderLayerBody()}
+function jsKey(i){return curLayer+'|'+i}
+function getJS(i){return judgeState[jsKey(i)]||(judgeState[jsKey(i)]={j:'',loc:'',note:''})}
+function renderLayers(){
+  $('layerbar').innerHTML=Object.keys(LAYERS).map(k=>`<button class="${k===curLayer?'on':''}" onclick="pickLayer('${k}')">${LAYERS[k].name}</button>`).join('');
+}
+function renderLayerBody(){
+  const L=LAYERS[curLayer];
+  let h=`<div class="note">${L.intro}</div>`;
+  h+=`<div class="grid" style="margin-bottom:14px">
+   <div class="field"><label>合同名称 / 版本</label><input type="text" value="${esc(judgeState.contractName||'')}" oninput="judgeState.contractName=this.value;saveJudge()"></div>
+   <div class="field"><label>审核人 / 日期</label><input type="text" value="${esc(judgeState.auditor||'')}" placeholder="如：法务部 张三 / 2026-11-09" oninput="judgeState.auditor=this.value;saveJudge()"></div>
+  </div>`;
+  if(curLayer==='approval'){
+    h+=`<div class="sec-title">一页纸审批摘要</div>
+    <div class="grid">
+     <div class="field"><label>合同标的</label><textarea oninput="judgeState.a1=this.value">${esc(judgeState.a1||'')}</textarea></div>
+     <div class="field"><label>对方主体</label><textarea oninput="judgeState.a2=this.value">${esc(judgeState.a2||'')}</textarea></div>
+     <div class="field"><label>商务要点（费用/期限/权利范围）</label><textarea oninput="judgeState.a3=this.value">${esc(judgeState.a3||'')}</textarea></div>
+     <div class="field"><label>前序层级结论与遗留黄项</label><textarea oninput="judgeState.a4=this.value">${esc(judgeState.a4||'')}</textarea></div>
+     <div class="field"><label>需管理层知悉的风险敞口</label><textarea oninput="judgeState.a5=this.value">${esc(judgeState.a5||'')}</textarea></div>
+    </div>
+    <div class="navbtns" style="margin-top:14px">
+      <button class="ghost" onclick="copyText(buildApprovalDoc(),'审批摘要已复制')">复制摘要</button>
+      <button class="primary" onclick="downloadWord(buildApprovalDoc(true),'合同审批一页纸摘要')">下载 Word 摘要</button>
+    </div>`;
+    $('layerBody').innerHTML=h; saveJudge(); return;
+  }
+  h+=`<table class="review"><thead><tr><th style="width:130px">审查点</th><th>关注内容</th><th style="width:150px">判定</th><th style="width:120px">条款定位</th><th style="width:240px">问题与建议</th></tr></thead><tbody>`;
+  L.items.forEach((it,i)=>{
+    const s=getJS(i);
+    h+=`<tr><td class="item-name">${it.n}${it.red?'<span class="redline">红线</span>':''}</td>
+    <td class="focus">${it.f}${it.red?'<br><span style="color:var(--red);font-size:12px">红线标准：'+it.red+'</span>':''}</td>
+    <td><select class="judge ${s.j==='绿'?'g':s.j==='黄'?'y':s.j==='红'?'r':''}" onchange="getJS(${i}).j=this.value;this.className='judge '+(this.value==='绿'?'g':this.value==='黄'?'y':this.value==='红'?'r':'');renderLayerBody()">`+
+      ['','绿','黄','红'].map(v=>`<option ${s.j===v?'selected':''}>${v}</option>`).join('')+`</select></td>
+    <td><input class="loc" placeholder="如 5.2 条" value="${esc(s.loc)}" oninput="getJS(${i}).loc=this.value;saveJudge()"></td>
+    <td><textarea placeholder="问题说明 / 修改建议" oninput="getJS(${i}).note=this.value;saveJudge()">${esc(s.note)}</textarea></td></tr>`;
+  });
+  h+='</tbody></table>';
+  const st=calcConclusion();
+  const cls=st.c==='同意签署'?'pass':st.c==='修改后签署'?'fix':'reject';
+  h+=`<div class="conclusion ${cls}">总体结论：${st.c}${st.redN?`（存在 ${st.redN} 个红项）`:''}${st.yN?`（黄项 ${st.yN} 个）`:''}${st.unN?`（未判定 ${st.unN} 项）`:''}</div>`;
+  h+=`<div class="field"><label>随审需补充的材料</label><textarea oninput="judgeState.extra=this.value">${esc(judgeState.extra||'')}</textarea></div>`;
+  h+=`<div class="navbtns" style="margin-top:12px">
+    <span style="color:var(--muted);font-size:12px;align-self:center">判定自动保存在本机浏览器</span>
+    <div>
+      <button class="ghost" onclick="resetJudge()">清空判定</button>
+      <button class="ghost" onclick="copyText(buildOpinionDoc(),'审核意见已复制')">复制意见书</button>
+      <button class="primary" onclick="downloadWord(buildOpinionDoc(true),'合同审核意见书（${LAYERS[curLayer].name}）')">下载 Word 意见书</button>
+    </div>
+  </div>`;
+  h+=`<div class="sec-title">审核话术模板</div><div class="scripts" id="scriptbox"></div>`;
+  $('layerBody').innerHTML=h; renderScripts(); saveJudge();
+}
+function renderScripts(){
+  const box=$('scriptbox'); if(!box)return;
+  let h='';
+  allScripts(curLayer).forEach((s,i)=>{
+    const isCustom=customScripts[curLayer]&&i>=LAYERS[curLayer].scripts.length;
+    h+=`<div class="script"><h4>${esc(s.t)}${isCustom?'<span class="redline" style="background:var(--blue-weak);color:var(--blue)">自定义</span>':''}<button class="ghost" onclick="copyText(this.closest('.script').querySelector('p').textContent,'话术已复制')">复制</button>${isCustom?`<button class="danger" onclick="delScript(${i-LAYERS[curLayer].scripts.length})">删除</button>`:''}</h4><p>${esc(s.c)}</p></div>`;
+  });
+  h+=`<div class="addscript"><h4 style="font-size:13px;color:var(--blue);margin-bottom:8px">＋ 新增自定义话术（保存到本机浏览器，${LAYERS[curLayer].name}层级）</h4>
+  <input id="nsTitle" placeholder="话术标题，如：价格谈判话术">
+  <textarea id="nsBody" placeholder="话术内容。建议结构：条款位置 → 风险后果 → 替代方案"></textarea>
+  <button class="primary" onclick="addScript()">添加话术</button></div>`;
+  box.innerHTML=h;
+}
+function calcConclusion(){
+  const L=LAYERS[curLayer];let redN=0,yN=0,unN=0;
+  L.items.forEach((it,i)=>{const s=getJS(i);if(!s.j)unN++;else if(s.j==='红')redN++;else if(s.j==='黄')yN++});
+  const c=redN>0?'不同意签署':(yN>0?'修改后签署':(unN>0?'待完成判定':'同意签署'));
+  return {c,redN,yN,unN};
+}
+function resetJudge(){LAYERS[curLayer].items.forEach((_,i)=>{delete judgeState[jsKey(i)]});renderLayerBody()}
+function saveJudge(){try{localStorage.setItem('lcjudge',JSON.stringify(judgeState))}catch(e){}}
+(function loadJudge(){try{const s=JSON.parse(localStorage.getItem('lcjudge')||'null');if(s)Object.assign(judgeState,s)}catch(e){}})();
+
+function buildOpinionDoc(forDoc){
+  const L=LAYERS[curLayer];const st=calcConclusion();
+  let h=forDoc?`<h2 style="text-align:center">合同审核意见书</h2>`:'';
+  h+=`<table class="summary-table" style="margin-bottom:14px"><tr><th>审核层级</th><td>${L.name}</td></tr><tr><th>审核对象</th><td>${esc(judgeState.contractName||'（未填写）')}</td></tr><tr><th>总体结论</th><td><b>${st.c}</b></td></tr><tr><th>审核人/日期</th><td>${esc(judgeState.auditor||'')}</td></tr></table>`;
+  const sec=(title,rows)=>{ if(!rows.length) return ''; let t=`<p style="font-weight:700;margin:10px 0 4px">${title}</p><table class="summary-table">`; rows.forEach((r,i)=>{t+=`<tr><th style="width:70px">${r.tag}${i+1}</th><td><b>条款定位：</b>${esc(r.loc)||'—'}<br><b>问题：</b>${esc(r.note)||esc(L.items[r.i].f)}${r.red?`<br><b>红线标准：</b>${esc(r.red)}`:''}</td></tr>`}); return t+'</table>' };
+  const items=L.items.map((it,i)=>({it,s:getJS(i),i}));
+  h+=sec('一、红项（必须解决，否则不同意签署）', items.filter(x=>x.s.j==='红').map(x=>({tag:'R',loc:x.s.loc,note:x.s.note,red:x.it.red,i:x.i})));
+  h+=sec('二、黄项（修改或书面说明后可签）', items.filter(x=>x.s.j==='黄').map(x=>({tag:'Y',loc:x.s.loc,note:x.s.note,i:x.i})));
+  const greens=items.filter(x=>x.s.j==='绿').map(x=>x.it.n).join('、');
+  h+=`<p style="font-weight:700;margin:10px 0 4px">三、已核通过的关键点</p><p>${esc(greens)||'—'}</p>`;
+  h+=`<p style="font-weight:700;margin:10px 0 4px">四、随审需补充的材料</p><p>${esc(judgeState.extra)||'—'}</p>`;
+  if(st.unN)h+=`<p style="color:#b35900;font-size:12px;margin-top:8px">※ 尚有 ${st.unN} 个审查点未判定，意见书完整前请逐项核对。</p>`;
+  return h;
+}
+function buildApprovalDoc(forDoc){
+  let h=forDoc?'<h2 style="text-align:center">合同审批一页纸摘要</h2>':'';
+  const row=(a,b)=>`<tr><th style="width:190px">${a}</th><td>${esc(b)||'—'}</td></tr>`;
+  h+=`<table class="summary-table">${row('合同名称/版本',judgeState.contractName)}${row('合同标的',judgeState.a1)}${row('对方主体',judgeState.a2)}${row('商务要点',judgeState.a3)}${row('前序层级结论与遗留黄项',judgeState.a4)}${row('需管理层知悉的风险敞口',judgeState.a5)}${row('审批人/日期',judgeState.auditor)}</table>`;
+  h+='<p style="font-size:12px;color:#66707c;margin-top:10px">审批层不重复业务/法务/财务审查；本摘要基于前序层级意见编制。</p>';
+  return h;
+}
+
+/* ============ init ============ */
+renderTypeBar();renderSteps();renderStep();renderLayers();renderLayerBody();
+</script>
+</body>
+</html>
