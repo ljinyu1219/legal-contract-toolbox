@@ -334,7 +334,7 @@ press:{name:'图书出版（出版社）',sets:[
  {sec:'流转与签约信息', desc:'对应出版合同首部与签署页。', fields:[
   {id:'contractNo',l:'合同编号',t:'text'},
   {id:'signPlace',l:'签订地',t:'text',hint:'例：××市××区（影响管辖联系点）'},
-  {id:'bookTitle',l:'作品名称（系列名+册数）',t:'text',req:1,hint:'例：××系列（10-12册）；暂定名称的注明"暂定，出版名称双方协商确定"'},
+  {id:'bookTitle',l:'作品名称（系列名+册数）',t:'text',req:1,hint:'填写系列名与册数；暂定名称的注明"暂定，出版名称双方协商确定"'},
   {id:'authorship',l:'署名方式',t:'radio',opts:['××文化/著','××文化 出品 ×××/著','×××/著 ××文化出品','其他（另行说明）'],req:1},
   {id:'authorshipOther',l:'署名方式说明',t:'text',showIf:{f:'authorship',v:'其他（另行说明）'}},
   {id:'ourCopies',l:'合同份数：我方执',t:'radio',opts:['两份','一份','三份']},
