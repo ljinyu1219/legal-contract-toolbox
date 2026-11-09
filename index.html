@@ -101,6 +101,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
 <nav class="tabs">
   <button id="tab1" class="on" onclick="switchTab(1)">① 商业信息填报助手</button>
   <button id="tab2" onclick="switchTab(2)">② 审核层级要点与意见生成</button>
+  <button id="tab3" onclick="switchTab(3)">③ 制式合同模板存档</button>
 </nav>
 <main>
 
@@ -114,7 +115,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
   </div>
   <div class="card">
     <h2><span class="no">模板</span>上传合同模板（可选）</h2>
-    <div class="desc">上传 .docx 合同模板后：自动扫描模板中的占位符/残句/空白附件；填完信息后可按模板生成<b>合同初稿</b>（已填项自动代入，未填项黄色高亮，供法务终审）。不上传也可正常填报。</div>
+    <div class="desc">若法务已在「③ 制式合同模板存档」入库，直接在上方<b>从模板库选用</b>即可，无需上传。也可在此临时上传 .docx/.txt 合同模板：自动扫描占位符/残句/空白附件；填完信息后可按模板生成<b>合同初稿</b>（已填项自动代入，未填项黄色高亮，供法务终审）。不选模板也可正常填报。</div>
+    <div id="tplArcWrap" style="display:none;margin-bottom:12px;padding:12px 14px;background:var(--blue-weak);border-radius:10px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">从模板库选用制式合同（法务已存档）</div>
+      <select id="tplArcSel" onchange="useArcSel(this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff"><option value="">— 选择存档模板 —</option></select>
+    </div>
     <div class="uploadbox" onclick="document.getElementById('tplfile').click()">
       <b>点击选择文件</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="tplname"></div>
     </div>
@@ -171,7 +176,47 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
   </div>
 </section>
 
+<!-- ================= 模块三：制式合同模板存档 ================= -->
+<section id="panel3" class="panel">
+  <div class="card">
+    <h2><span class="no">上传</span>存入制式合同模板</h2>
+    <div class="desc">由法务/管理员把各类<b>制式合同模板</b>（我方定稿版本）存档入库，供填报同事在「① 填报助手」直接选用。模板在<b>本机浏览器</b>内解析并保存（.docx 自动提取纯文字，不经任何服务器）；如需分发给其他同事，用下方「导出存档」生成 JSON 文件，对方在他们的页面里一键导入。</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 10px">
+      <input id="arcName" placeholder="模板名称（例：形象授权许可协议 V2.1）" style="flex:2;min-width:240px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+      <select id="arcType" style="flex:1;min-width:150px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff">
+        <option>形象授权</option><option>游戏授权</option><option>图书出版</option><option>出版授权</option><option>通用</option><option>其他</option>
+      </select>
+    </div>
+    <div class="uploadbox" onclick="document.getElementById('arcfile').click()">
+      <b>点击选择模板文件</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="arcfname"></div>
+    </div>
+    <input type="file" id="arcfile" accept=".docx,.txt" style="display:none" onchange="onArcFile(this)">
+    <div id="arcpre" style="margin-top:12px"></div>
+    <div class="navbtns" style="margin-top:10px">
+      <button class="primary" id="arcSaveBtn" onclick="saveArcTpl()" style="display:none">✔ 存入模板库</button>
+      <button class="ghost" id="arcCancelBtn" onclick="cancelArc()" style="display:none">放弃</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="no">存档</span>模板库</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <select id="arcFilter" onchange="renderArc()" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff">
+        <option value="">全部类型</option><option>形象授权</option><option>游戏授权</option><option>图书出版</option><option>出版授权</option><option>通用</option><option>其他</option>
+      </select>
+      <button class="ghost" onclick="exportArc()">⬇ 导出存档（JSON）</button>
+      <button class="ghost" onclick="document.getElementById('arcimpfile').click()">⬆ 导入存档（JSON）</button>
+      <input type="file" id="arcimpfile" accept=".json" style="display:none" onchange="importArc(this)">
+      <span style="font-size:12px;color:var(--muted)" id="arcCount"></span>
+    </div>
+    <div id="arclist"></div>
+  </div>
+</section>
 </main>
+<div id="arcMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50" onclick="closeArcView()"></div>
+<div id="arcView" style="display:none;position:fixed;z-index:60;top:5%;left:50%;transform:translateX(-50%);width:min(880px,94vw);max-height:86vh;overflow:auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+  <div id="arcViewBody"></div>
+  <div style="margin-top:16px;text-align:right"><button class="ghost" onclick="closeArcView()">关闭</button></div>
+</div>
 <div class="toast" id="toast"></div>
 <div id="schemaMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50" onclick="closeSchema()"></div>
 <div id="schemaPanel" style="display:none;position:fixed;top:3%;left:50%;transform:translateX(-50%);width:min(900px,95vw);max-height:92vh;overflow:auto;background:#fff;border-radius:12px;z-index:51;box-shadow:0 10px 40px rgba(0,0,0,.25);padding:18px"></div>
@@ -180,7 +225,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
 /* ============ 通用 ============ */
 function $(id){return document.getElementById(id)}
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2200)}
-function switchTab(n){for(let i=1;i<=2;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
+function switchTab(n){for(let i=1;i<=3;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
 function copyText(txt,okmsg){navigator.clipboard.writeText(txt).then(()=>toast(okmsg||'已复制'),()=>toast('复制失败，请手动选择文本'))}
 function downloadWord(html, filename){
   const doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+filename+'</title></head><body>'+html+'</body></html>';
@@ -819,6 +864,107 @@ function regionText(){
   if(arr.includes('特定国家/地区')&&val('specTerritory')){arr[arr.indexOf('特定国家/地区')]='特定国家/地区（'+val('specTerritory')+'）'}
   return arr.join('、')||'【授权地域】';
 }
+/* ================= 制式合同模板存档 ================= */
+let ARCTPL=[];try{ARCTPL=JSON.parse(localStorage.getItem('lctplarc')||'[]')}catch(e){ARCTPL=[]}
+let arcPending=null;
+function persistArc(){try{localStorage.setItem('lctplarc',JSON.stringify(ARCTPL))}catch(e){toast('保存失败：模板总量超出浏览器本地存储上限，请删除部分旧模板后重试')}}
+function onArcFile(input){
+  const f=input.files[0]; if(!f)return;
+  $('arcfname').textContent=f.name;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      let text;
+      if(/\.txt$/i.test(f.name)){ text=e.target.result; }
+      else{
+        if(typeof mammoth==='undefined'){toast('docx 解析组件加载失败（网络原因），请改传 .txt 版模板');return}
+        const r=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        text=r.value;
+      }
+      const scan=scanPlaceholders(text);
+      arcPending={fname:f.name,text,scan};
+      $('arcpre').innerHTML='<div class="risk '+(scan.length?'warn':'')+'" style="background:'+(scan.length?'#fffbe6':'var(--green-weak)')+'">已解析「'+esc(f.name)+'」：'+text.length.toLocaleString()+' 字，发现占位符/待补项 <b>'+scan.length+'</b> 处。确认无误后点「存入模板库」。</div>';
+      $('arcSaveBtn').style.display='';$('arcCancelBtn').style.display='';
+    }catch(err){toast('解析失败：'+err.message)}
+  };
+  reader.readAsArrayBuffer(f);
+}
+function cancelArc(){arcPending=null;$('arcfname').textContent='';$('arcpre').innerHTML='';$('arcSaveBtn').style.display='none';$('arcCancelBtn').style.display='none';document.getElementById('arcfile').value=''}
+function saveArcTpl(){
+  if(!arcPending){toast('请先选择模板文件');return}
+  const name=$('arcName').value.trim()||arcPending.fname.replace(/\.(docx|txt)$/i,'');
+  const dup=ARCTPL.findIndex(t=>t.name===name&&t.type===$('arcType').value);
+  const entry={id:Date.now()+''+Math.floor(Math.random()*1e4),name,type:$('arcType').value,fname:arcPending.fname,at:new Date().toLocaleString('zh-CN'),text:arcPending.text,scan:arcPending.scan.length};
+  if(dup>-1){ if(!confirm('模板库中已有同名同类型的「'+name+'」，是否覆盖旧版本？'))return; entry.id=ARCTPL[dup].id; ARCTPL[dup]=entry; }
+  else ARCTPL.unshift(entry);
+  persistArc(); cancelArc(); $('arcName').value='';
+  renderArc(); renderArcSelect(); toast('已存入模板库');
+}
+function delArc(id){ if(!confirm('确认从模板库删除该存档？'))return; ARCTPL=ARCTPL.filter(t=>t.id!==id); persistArc(); renderArc(); renderArcSelect(); toast('已删除'); }
+function useArc(id){
+  const t=ARCTPL.find(x=>x.id===id); if(!t)return;
+  TPL.text=t.text; TPL.name=t.name; TPL.scan=scanPlaceholders(t.text);
+  renderScan(); if($('stepbody')&&$('stepbody').innerHTML) renderStep();
+  switchTab(1); toast('已选用模板：'+t.name+'（发现 '+TPL.scan.length+' 处待补项）');
+}
+function useArcSel(v){ if(v) useArc(v); }
+function viewArc(id){
+  const t=ARCTPL.find(x=>x.id===id); if(!t)return;
+  const lines=t.text.split(/\n+/).map(l=>{
+    if(!l.trim())return'';
+    return '<p style="margin:2px 0;line-height:1.7;font-size:13px">'+highlight(l)+'</p>';
+  }).join('');
+  $('arcViewBody').innerHTML='<h3 style="margin:0 0 4px">'+esc(t.name)+'</h3>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:12px">'+esc(t.type)+' ｜ 来源文件：'+esc(t.fname||'—')+' ｜ 存入：'+esc(t.at||'')+' ｜ 待补项 '+t.scan+' 处（黄色高亮）</div>'
+    +'<div style="border-top:1px solid var(--line);padding-top:12px">'+lines+'</div>';
+  $('arcMask').style.display='block'; $('arcView').style.display='block';
+}
+function closeArcView(){$('arcMask').style.display='none';$('arcView').style.display='none'}
+function renderArc(){
+  const ft=$('arcFilter').value;
+  const list=ARCTPL.filter(t=>!ft||t.type===ft);
+  $('arcCount').textContent='共 '+ARCTPL.length+' 份';
+  if(!list.length){$('arclist').innerHTML='<div class="note">模板库为空'+(ft?'（当前筛选下无模板）':'')+'。用上方表单存入第一份制式合同模板，或导入同事分享的存档 JSON。</div>';return}
+  $('arclist').innerHTML='<table class="summary-table"><tr><th>模板名称</th><th>类型</th><th>来源文件</th><th>存入时间</th><th>待补项</th><th style="width:190px">操作</th></tr>'
+    +list.map(t=>'<tr><td><b>'+esc(t.name)+'</b></td><td>'+esc(t.type)+'</td><td style="font-size:12px;color:var(--muted)">'+esc(t.fname||'—')+'</td><td style="font-size:12px">'+esc(t.at||'—')+'</td><td>'+(t.scan?'<span style="color:#b58900">'+t.scan+' 处</span>':'<span style="color:var(--green)">0</span>')+'</td>'
+    +'<td><button class="ghost" style="padding:5px 10px;font-size:12px" onclick="useArc(\''+t.id+'\')">选用</button> <button class="ghost" style="padding:5px 10px;font-size:12px" onclick="viewArc(\''+t.id+'\')">查看</button> <button class="ghost" style="padding:5px 10px;font-size:12px;color:#b3474f" onclick="delArc(\''+t.id+'\')">删除</button></td></tr>').join('')
+    +'</table>';
+}
+function renderArcSelect(){
+  const sel=$('tplArcSel'); if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— 选择存档模板 —</option>'+ARCTPL.map(t=>'<option value="'+t.id+'">'+esc(t.type)+' ｜ '+esc(t.name)+'</option>').join('');
+  sel.value=cur;
+  $('tplArcWrap').style.display=ARCTPL.length?'block':'none';
+}
+function exportArc(){
+  if(!ARCTPL.length){toast('模板库为空，无可导出内容');return}
+  const blob=new Blob([JSON.stringify({kind:'legal-toolbox-template-archive',version:1,exportedAt:new Date().toLocaleString('zh-CN'),templates:ARCTPL},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='制式合同模板存档_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('存档已导出（JSON）');
+}
+function importArc(input){
+  const f=input.files[0]; if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      const arr=Array.isArray(d)?d:(d.templates||[]);
+      const valid=arr.filter(t=>t&&typeof t.text==='string'&&t.name);
+      if(!valid.length){toast('文件中没有可导入的模板（缺少 name/text 字段）');return}
+      let added=0,updated=0;
+      valid.forEach(t=>{
+        const idx=ARCTPL.findIndex(x=>x.id===t.id);
+        const entry={id:t.id||Date.now()+''+Math.floor(Math.random()*1e4),name:t.name,type:t.type||'其他',fname:t.fname||'',at:t.at||new Date().toLocaleString('zh-CN'),text:t.text,scan:typeof t.scan==='number'?t.scan:scanPlaceholders(t.text).length};
+        if(idx>-1){ARCTPL[idx]=entry;updated++}else{ARCTPL.unshift(entry);added++}
+      });
+      persistArc(); renderArc(); renderArcSelect();
+      toast('导入完成：新增 '+added+' 份，覆盖 '+updated+' 份');
+    }catch(err){toast('导入失败：JSON 解析错误')}
+  };
+  reader.readAsText(f,'utf-8');
+}
+(function initArc(){renderArc();renderArcSelect()})();
 function highlight(text){
   return esc(text)
     .replace(/【[^】]*】/g,m=>'<mark class="ph">'+m+'</mark>')
