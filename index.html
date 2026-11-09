@@ -303,7 +303,7 @@ image:{name:'形象授权',sets:[
   {id:'termRuleOther',l:'其他期限说明',t:'text',showIf:{f:'termRule',v:'其他（说明）'}},
   {id:'offlineBuffer',l:'下线缓冲期',t:'radio',opts:['期满后 1 个月内全部渠道下架','期满后立即下架','其他（说明）']},
   {id:'authCert',l:'《授权证明书》',t:'radio',opts:['收到全额保底授权费后开具（推荐）','签约后开具']},
-  {id:'opChannels',l:'运营渠道（勾选）',t:'checks',opts:['全渠道全平台','线上综合渠道（京东/抖音/淘宝等）','线下门店','硬件厂商渠道（品牌门店）','特定渠道（注明）']},
+  {id:'opChannels',l:'运营渠道（勾选）',t:'checks',opts:['全渠道全平台','线上综合电商平台','内容电商/直播电商','线下门店','硬件厂商渠道（品牌门店）','特定渠道（注明）']},
   {id:'opChannelsNote',l:'特定渠道说明',t:'text',showIf:{f:'opChannels',has:'特定渠道（注明）'}},
   {id:'opNotify',l:'运营信息书面提前通知',t:'radio',opts:['运营/试运营前 15 个工作日（推荐）','其他时限（说明）']},
   {id:'thirdPartyLimit',l:'第三方元素限制条款（音乐/商标/字体等须对方自行取得许可）',t:'radio',opts:['已约定（推荐）','未约定']},
@@ -908,7 +908,7 @@ function extractTerms(text){
   if(m=text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日[^，。\n]{0,8}(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/)) push('期限区间', m[0].slice(0,50));
   else if(m=text.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/)) push('日期（首处）', m[0]);
   if(m=text.match(/[^\s。；\n]{0,12}违约金[^\s。；\n]{0,25}/g)) push('违约金条款', m.slice(0,3).join('；'));
-  if(m=text.match(/全渠道|京东|抖音|淘宝|天猫|拼多多|线下门店|门店|电商/g)) push('渠道关键词', [...new Set(m)].slice(0,8).join('、'));
+  if(m=text.match(/全渠道|电商平台|直播|线下门店|门店|电商/g)) push('渠道关键词', [...new Set(m)].slice(0,8).join('、'));
   if(m=text.match(/仲裁委员会|仲裁机构|人民法院/)) push('争议解决', m[0]);
   if(/防伪|镭射/.test(text)) push('防伪条款','对方模板含防伪/镭射标相关条款，请核对单价与赔偿标准');
   if(/版税|稿酬|印数/.test(text)) push('出版结算','对方模板含版税/稿酬/印数条款，请核对计算基数');
