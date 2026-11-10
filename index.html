@@ -102,6 +102,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
   <button id="tab1" class="on" onclick="switchTab(1)">① 商业信息填报助手</button>
   <button id="tab2" onclick="switchTab(2)">② 审核层级要点与意见生成</button>
   <button id="tab3" onclick="switchTab(3)">③ 制式合同模板存档</button>
+  <button id="tab4" onclick="switchTab(4)">④ 内容脱敏</button>
+  <button id="tab5" onclick="switchTab(5)">⑤ 内容检查</button>
 </nav>
 <main>
 
@@ -211,6 +213,42 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
     <div id="arclist"></div>
   </div>
 </section>
+
+<!-- ================= 模块四：内容脱敏 ================= -->
+<section id="panel4" class="panel">
+  <div class="card">
+    <div class="note">用途：对外提供合同文本（如供对方传阅、模板交流、案例分享）前，自动筛查并替换<b>主体名称、统一社会信用代码、地址、联系方式、银行账户、金额价款、比例税率、合同编号</b>等保密字段，一键生成<b>脱敏版</b>与<b>原文对照表</b>。全部处理在本机浏览器完成，不上传服务器。<b>注意</b>：品牌简称、内部项目代号等非格式化字段机器难以识别，请填入「自定义敏感词」；脱敏版对外发送前必须人工复核。</div>
+    <div class="uploadbox" onclick="document.getElementById('sanfile').click()">
+      <b>点击选择合同文件</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="sanname"></div>
+    </div>
+    <input type="file" id="sanfile" accept=".docx,.txt" style="display:none" onchange="onSanFile(this)">
+    <div class="sec-title">脱敏范围（勾选要替换的字段类型）</div>
+    <div class="opts" id="sanOpts"></div>
+    <div class="field" style="margin-top:10px">
+      <label>自定义敏感词（每行一个，出现即替换为【脱敏N】）</label>
+      <textarea id="sanCustom" placeholder="例如：品牌简称、内部项目代号、人员姓名、未注册成公司全称的合作方名称"></textarea>
+    </div>
+    <div class="navbtns" style="margin-top:12px">
+      <button class="primary" onclick="runSanitize()">生成脱敏版</button>
+    </div>
+    <div id="sanout" style="margin-top:16px"></div>
+  </div>
+</section>
+
+<!-- ================= 模块五：内容检查 ================= -->
+<section id="panel5" class="panel">
+  <div class="card">
+    <div class="note">用途：对合同文本做机器预检，输出问题清单与 Word 检查报告。<b>价款核对</b>：大小写金额一致、小写缺大写、含税注明、0 元金额、大写「拾/壹拾」规范、比例超 100%；<b>错别字与用词</b>：签定/签订、订金/定金、抵消/抵销、帐/账、权力/权利等高频误写；<b>标点格式</b>：中英文标点混用、括号与引号不配对；<b>条款引用</b>：第 X 条空引用/断链、编号重复与跳号；<b>日期</b>：无效日期。规则来源于法务部审核要点沉淀，机器结果仅供辅助校对，最终以人工审校为准。</div>
+    <div class="uploadbox" onclick="document.getElementById('chkfile').click()">
+      <b>点击选择合同文件</b>（.docx 或 .txt）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="chkname"></div>
+    </div>
+    <input type="file" id="chkfile" accept=".docx,.txt" style="display:none" onchange="onChkFile(this)">
+    <div class="navbtns" style="margin-top:12px">
+      <button class="primary" onclick="runCheck()">开始检查</button>
+    </div>
+    <div id="chkout" style="margin-top:16px"></div>
+  </div>
+</section>
 </main>
 <div id="arcMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50" onclick="closeArcView()"></div>
 <div id="arcView" style="display:none;position:fixed;z-index:60;top:5%;left:50%;transform:translateX(-50%);width:min(880px,94vw);max-height:86vh;overflow:auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
@@ -225,7 +263,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
 /* ============ 通用 ============ */
 function $(id){return document.getElementById(id)}
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2200)}
-function switchTab(n){for(let i=1;i<=3;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
+function switchTab(n){for(let i=1;i<=5;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
 function copyText(txt,okmsg){navigator.clipboard.writeText(txt).then(()=>toast(okmsg||'已复制'),()=>toast('复制失败，请手动选择文本'))}
 function downloadWord(html, filename){
   const doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+filename+'</title></head><body>'+html+'</body></html>';
@@ -1309,8 +1347,317 @@ function buildApprovalDoc(forDoc){
   return h;
 }
 
+/* ============ 模块四：内容脱敏 ============ */
+let SANE={text:null,name:null,result:null,opts:{}};
+const SAN_OPTS=[
+ ['party','主体名称（甲乙方及第三方公司）',1],
+ ['code','统一社会信用代码',1],
+ ['addr','地址/住所',1],
+ ['contact','联系方式（联系人/电话/邮箱）',1],
+ ['bank','银行账户信息',1],
+ ['amount','金额与价款（大写/小写/万元）',1],
+ ['ratio','比例/税率/分成比例',1],
+ ['cono','合同编号',1],
+ ['date','日期（慎选，可能影响条款可读性）',0],
+];
+SAN_OPTS.forEach(o=>SANE.opts[o[0]]=!!o[2]);
+function renderSanOpts(){
+  $('sanOpts').innerHTML=SAN_OPTS.map(o=>`<label><input type="checkbox" ${SANE.opts[o[0]]?'checked':''} onchange="SANE.opts['${o[0]}']=this.checked"> ${o[1]}</label>`).join('');
+}
+function escRe(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function onSanFile(input){
+  const f=input.files[0]; if(!f)return;
+  $('sanname').textContent=f.name;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      if(/\.txt$/i.test(f.name)){ SANE.text=e.target.result; }
+      else{
+        if(typeof mammoth==='undefined'){toast('docx 解析组件加载失败（网络原因），请改传 .txt 版本');return}
+        const r=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        SANE.text=r.value;
+      }
+      SANE.name=f.name; SANE.result=null; $('sanout').innerHTML='';
+      toast('合同已解析：'+SANE.text.length.toLocaleString()+' 字，点击「生成脱敏版」');
+    }catch(err){toast('解析失败：'+err.message)}
+  };
+  reader.readAsArrayBuffer(f);
+}
+const COMP_RE=/[\u4e00-\u9fa5A-Za-z0-9（）()]{2,28}?(?:股份有限公司|有限责任公司|有限公司|集团公司|集团|律师事务所|会计师事务所|工作室)/g;
+function runSanitize(){
+  if(!SANE.text){toast('请先上传合同文件');return}
+  const o=SANE.opts;
+  let t=SANE.text;
+  const M=[]; const idx=new Map();
+  const put=(orig,ph,cat)=>{const e0=idx.get(orig); if(e0){e0.n++;return e0.ph} const ne={orig,ph,cat,n:1}; idx.set(orig,ne); M.push(ne); return ne.ph};
+  const rep=(re,cat,fn)=>{ t=t.replace(re,(...a)=>{ const r=fn(...a); if(r===a[0]) return a[0]; return put(a[0],r,cat) }) };
+  /* 1) 主体名称 */
+  if(o.party){
+    const names=[]; const seen=new Set();
+    for(const m of t.matchAll(COMP_RE)){ if(!seen.has(m[0])){seen.add(m[0]);names.push(m[0])} }
+    let roleA=null,roleB=null;
+    t.split(/\n/).forEach(l=>{
+      let m;
+      if(roleA===null&&(m=l.match(/^\s*甲\s*方[:：]?\s*(.*)$/))) roleA=names.find(n=>m[1].includes(n))||null;
+      if(roleB===null&&(m=l.match(/^\s*乙\s*方[:：]?\s*(.*)$/))) roleB=names.find(n=>m[1].includes(n))||null;
+    });
+    const phOf={}; let ci=0; const L='CDEFGHIJKLMN';
+    names.forEach(n=>{ phOf[n]= n===roleA?'【甲方主体】': n===roleB?'【乙方主体】':'【主体'+L[ci++%L.length]+'】' });
+    names.slice().sort((a,b)=>b.length-a.length).forEach(n=>{
+      t=t.replace(new RegExp(escRe(n),'g'),()=>put(n,phOf[n],'主体名称'));
+    });
+  }
+  /* 2) 合同编号 */
+  if(o.cono) rep(/(合同编号|协议编号)[:：]\s*[\w\u4e00-\u9fa5-]{2,40}/g,'合同编号',m=>m.replace(/([:：]\s*).+$/,'$1【合同编号】'));
+  /* 3) 统一社会信用代码 */
+  if(o.code){
+    rep(/统一社会信用代码[:：]?\s*[0-9A-Z]{15,20}/g,'统一社会信用代码',m=>m.replace(/[0-9A-Z]{15,20}$/,'【信用代码】'));
+    rep(/[0-9A-HJ-NPQRTUWXY]{18}/g,'统一社会信用代码',m=>((m.match(/\d/g)||[]).length>=8?'【信用代码】':m));
+  }
+  /* 4) 银行账户 */
+  if(o.bank){
+    rep(/(开户行|开户银行|开户名称|银行账号|账号|卡号)[:：]\s*[^，,。；;\n]{4,80}/g,'银行账户',m=>m.replace(/([:：]\s*).+$/,'$1【账户信息】'));
+    rep(/\d{15,25}/g,'银行账户',m=>'【账号】');
+  }
+  /* 5) 地址 */
+  if(o.addr) rep(/(地址|住所|住所地|注册地址|经营地址|办公地址|送达地址|通讯地址)[:：]\s*[^，,。；;\n]{4,60}/g,'地址',m=>m.replace(/([:：]\s*).+$/,'$1【地址】'));
+  /* 6) 联系方式（先替换手机/座机/邮箱，再替换带标签的联系人字段，避免标签规则截断邮箱） */
+  if(o.contact){
+    rep(/1[3-9]\d{9}/g,'联系方式',m=>'【电话】');
+    rep(/0\d{2,3}[-—]\d{7,8}/g,'联系方式',m=>'【电话】');
+    rep(/400[-—]?\d{3,4}[-—]?\d{3,4}/g,'联系方式',m=>'【电话】');
+    rep(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,'联系方式',m=>'【邮箱】');
+    rep(/(联系人|经办人|联络人|授权代表|委托代理人)[:：]\s*[^，,。；;\n]{2,30}/g,'联系方式',m=>m.replace(/([:：]\s*).+$/,'$1【联系人】'));
+  }
+  /* 7) 金额与价款 */
+  if(o.amount){
+    rep(/[壹贰叁肆伍陆柒捌玖拾佰仟万亿零]{2,}[圆元][整角分]{0,3}/g,'价款金额',m=>'【大写金额】');
+    rep(/[￥¥]\s*[\d,，]+(?:\.\d+)?/g,'价款金额',m=>'【金额】');
+    rep(/[\d][\d,，]{2,}(?:\.\d+)?\s*万元/g,'价款金额',m=>'【金额】');
+    rep(/\d+\.\d+\s*元/g,'价款金额',m=>'【金额】');
+    rep(/[\d][\d,，]{2,}(?:\.\d+)?\s*元/g,'价款金额',m=>'【金额】');
+  }
+  /* 8) 比例/税率 */
+  if(o.ratio){
+    rep(/\d+(?:\.\d+)?\s*%/g,'比例/税率',m=>'【比例】');
+    rep(/万分之[零一二三四五六七八九十\d]+/g,'比例/税率',m=>'【比例】');
+  }
+  /* 9) 日期 */
+  if(o.date) rep(/\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日/g,'日期',m=>'【日期】');
+  /* 10) 自定义敏感词（最后执行，清理剩余简称/代号） */
+  $('sanCustom').value.split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach((w,i)=>{
+    if(w.length<2)return;
+    t=t.replace(new RegExp(escRe(w),'g'),()=>put(w,'【脱敏'+(i+1)+'】','自定义'));
+  });
+  const stat={}; M.forEach(e=>stat[e.cat]=(stat[e.cat]||0)+e.n);
+  SANE.result={text:t,map:M,stat,total:M.reduce((s,e)=>s+e.n,0)};
+  renderSanOut();
+}
+function renderSanOut(){
+  const R=SANE.result; if(!R){$('sanout').innerHTML='';return}
+  const cats=Object.keys(R.stat);
+  let h='<div class="risk '+(R.total?'warn':'')+'" style="background:'+(R.total?'#fffbe6':'var(--green-weak)')+'">脱敏完成：共替换 <b>'+R.total+'</b> 处'+(cats.length?'（'+cats.map(c=>esc(c)+' '+R.stat[c]+' 处').join('｜')+'）':'')+'。对外发送前请人工复核一遍。</div>';
+  h+='<div class="sec-title">替换对照表（含原文敏感信息，请勿随脱敏版外发）</div>';
+  h+='<table class="summary-table"><tr><th>原文</th><th>替换为</th><th>类别</th><th>次数</th></tr>'+R.map.map(e=>'<tr><td>'+esc(e.orig.slice(0,60))+'</td><td><b>'+esc(e.ph)+'</b></td><td>'+esc(e.cat)+'</td><td>'+e.n+'</td></tr>').join('')+'</table>';
+  h+='<div class="navbtns" style="margin-top:10px"><button class="ghost" onclick="copyText(buildSanMapText(),\'对照表已复制\')">复制对照表</button><button class="primary" style="background:var(--green)" onclick="downloadSanMap()">下载 Word 对照表</button></div>';
+  h+='<div class="sec-title">脱敏版预览</div><div class="draftbox">'+buildSanHTML()+'</div>';
+  h+='<div class="navbtns" style="margin-top:10px"><button class="ghost" onclick="copyText(SANE.result.text,\'脱敏文本已复制\')">复制脱敏全文</button><button class="primary" onclick="downloadSanDoc()">下载 Word 脱敏版</button></div>';
+  $('sanout').innerHTML=h;
+}
+function buildSanHTML(){
+  return SANE.result.text.split(/\n+/).map(l=>l.trim()?'<p style="margin:2px 0;line-height:1.7;font-size:13px">'+esc(l).replace(/【[^】]*】/g,m=>'<mark class="ph">'+m+'</mark>')+'</p>':'').join('');
+}
+function buildSanMapText(){
+  return '脱敏对照表（含敏感原文，勿随脱敏版外发）\n'+SANE.result.map.map(e=>e.orig+' → '+e.ph+'（'+e.cat+'，'+e.n+'处）').join('\n');
+}
+function downloadSanDoc(){
+  if(!SANE.result){toast('请先生成脱敏版');return}
+  const html='<p style="text-align:center;font-weight:bold;font-size:16px">合同脱敏版</p><p style="font-size:11px;color:#8a6d00;background:#fffbe6;padding:6px 10px;border-radius:6px">⚠ 本脱敏版由工具自动替换保密字段生成，黄色标注为替换占位符。对外提供前请人工复核：① 确认无遗漏的敏感信息（特别是简称、代号等非格式化字段）；② 本文件不得与「原文对照表」一同发送。</p>'+buildSanHTML();
+  downloadWord(html,'合同脱敏版_'+(SANE.name||'合同').replace(/\.[^.]+$/,''));
+  toast('Word 脱敏版已下载');
+}
+function downloadSanMap(){
+  if(!SANE.result){toast('请先生成脱敏版');return}
+  const html='<h2 style="text-align:center">脱敏对照表</h2><p style="font-size:11px;color:#8a6d00;background:#fffbe6;padding:6px 10px;border-radius:6px">⚠ 本表含未脱敏的原文敏感信息，仅供内部留档与恢复核对，请勿随脱敏版一同发送。</p><table class="summary-table"><tr><th>原文</th><th>替换为</th><th>类别</th><th>次数</th></tr>'+SANE.result.map.map(e=>'<tr><td>'+esc(e.orig.slice(0,60))+'</td><td>'+esc(e.ph)+'</td><td>'+esc(e.cat)+'</td><td>'+e.n+'</td></tr>').join('')+'</table>';
+  downloadWord(html,'脱敏对照表_'+(SANE.name||'合同').replace(/\.[^.]+$/,''));
+  toast('Word 对照表已下载');
+}
+
+/* ============ 模块五：内容检查（价款+错别字） ============ */
+let CHK={text:null,name:null,findings:null};
+function onChkFile(input){
+  const f=input.files[0]; if(!f)return;
+  $('chkname').textContent=f.name;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      if(/\.txt$/i.test(f.name)){ CHK.text=e.target.result; }
+      else{
+        if(typeof mammoth==='undefined'){toast('docx 解析组件加载失败（网络原因），请改传 .txt 版本');return}
+        const r=await mammoth.extractRawText({arrayBuffer:e.target.result});
+        CHK.text=r.value;
+      }
+      CHK.name=f.name; CHK.findings=null; $('chkout').innerHTML='';
+      toast('合同已解析，点击「开始检查」');
+    }catch(err){toast('解析失败：'+err.message)}
+  };
+  reader.readAsArrayBuffer(f);
+}
+function cn2int(s){
+  s=String(s).trim();
+  if(/^\d+$/.test(s))return parseInt(s,10);
+  const D={'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+  if(s.length===1&&D[s]!==undefined)return D[s];
+  let m=s.match(/^([一二三四五六七八九]?)十([一二三四五六七八九]?)$/);
+  if(m)return (m[1]?D[m[1]]:1)*10+(m[2]?D[m[2]]:0);
+  m=s.match(/^([一二三四五六七八九])百(十([一二三四五六七八九])?|([一二三四五六七八九])?十([一二三四五六七八九])?)?$/);
+  if(m)return D[m[1]]*100+(m[3]?D[m[3]]:0)+(m[4]?D[m[4]]*10:0)+(m[5]?D[m[5]]:0);
+  return null;
+}
+function parseUpper(s){
+  const D={'零':0,'壹':1,'贰':2,'叁':3,'肆':4,'伍':5,'陆':6,'柒':7,'捌':8,'玖':9};
+  const U={'拾':10,'佰':100,'仟':1000};
+  const parts=s.split(/[圆元]/); const ip=parts[0]||'', dp=parts[1]||'';
+  let total=0,sec=0,num=0;
+  for(const ch of ip){
+    if(D[ch]!==undefined)num=D[ch];
+    else if(U[ch]){sec+=(num||1)*U[ch];num=0}
+    else if(ch==='万'){total+=(sec+num)*10000;sec=0;num=0}
+    else if(ch==='亿'){total+=(sec+num)*1e8;sec=0;num=0}
+  }
+  total+=sec+num;
+  let dec=0;
+  const m1=dp.match(/([零壹贰叁肆伍陆柒捌玖])角/); if(m1)dec+=D[m1[1]]*0.1;
+  const m2=dp.match(/([零壹贰叁肆伍陆柒捌玖])分/); if(m2)dec+=D[m2[1]]*0.01;
+  return Math.round((total+dec)*100)/100;
+}
+const TYPOS=[
+ {p:/签定/g,lv:'warn',msg:'「签定」应为「签订」'},
+ {p:/订金/g,lv:'warn',msg:'「订金」无担保效力，如为担保性质应写「定金」，请核实本意'},
+ {p:/抵消/g,lv:'warn',msg:'规范法律用语为「抵销」（参照《民法典》），建议修改'},
+ {p:/帐[户号簿]/g,lv:'warn',msg:'「帐」应为「账」（账户/账号/账簿）'},
+ {p:/其它/g,lv:'warn',msg:'规范用词为「其他」'},
+ {p:/以予/g,lv:'warn',msg:'「以予」应为「予以」'},
+ {p:/覆行/g,lv:'warn',msg:'「覆行」应为「履行」'},
+ {p:/陪[偿尝]/g,lv:'warn',msg:'疑为「赔偿」误写，请核对'},
+ {p:/等侯/g,lv:'warn',msg:'「等侯」应为「等候」'},
+ {p:/既使/g,lv:'warn',msg:'「既使」应为「即使」'},
+ {p:/签属/g,lv:'warn',msg:'「签属」应为「签署」'},
+ {p:/过份/g,lv:'warn',msg:'「过份」应为「过分」'},
+ {p:/权力(?=义务|归属|转让|范围内|受限)/g,lv:'warn',msg:'疑为「权利」误写：「权力」指公权力，民事合同中应为「权利」'},
+ {p:/最终解释权/g,lv:'red',msg:'「最终解释权」条款依《消费者权益保护法》相关规定无效，请删除或修改'},
+ {p:/不含税价.{0,10}开具发票|发票金额.{0,6}不含税/g,lv:'warn',msg:'发票金额与含税/不含税口径需一致，请与财务核对开票口径'},
+];
+function runCheck(){
+  if(!CHK.text){toast('请先上传合同文件');return}
+  const lines=CHK.text.split(/\n/);
+  const F=[]; const seen=new Set();
+  const push=(cat,lv,li,term,msg)=>{
+    const k=cat+'|'+li+'|'+term+'|'+msg;
+    if(seen.has(k))return; seen.add(k);
+    F.push({cat,lv,line:li+1,term:term||'',msg,snippet:lines[li].trim().slice(0,70)});
+  };
+  /* 条款编号定义 */
+  const arts=new Set(); const artSeen={};
+  lines.forEach((l,i)=>{
+    const m=l.match(/^\s*第\s*([一二三四五六七八九十百\d]+)\s*条/);
+    if(m){const n=cn2int(m[1]);
+      if(n!=null){
+        if(arts.has(n))push('条款引用','red',i,m[0],'条款编号「'+m[0]+'」重复出现，请核对编号连续性');
+        arts.add(n); artSeen[n]=i;
+      }
+    }
+  });
+  const maxArt=arts.size?Math.max(...arts):0;
+  if(arts.size>=3){ for(let n=1;n<=maxArt;n++) if(!arts.has(n)) push('条款引用','warn',artSeen[maxArt],'第'+n+'条','正文未见第'+n+'条（编号不连续），请核实是否有缺条或跳号'); }
+  let taxMiss=0, lowNoUp=0;
+  lines.forEach((l,i)=>{
+    if(!l.trim())return;
+    /* ---- 价款核对 ---- */
+    const ups=[...l.matchAll(/[壹贰叁肆伍陆柒捌玖拾佰仟万亿零]{2,}[圆元][角分整]{0,3}/g)].map(m=>m[0]);
+    const lows=[];
+    for(const m of l.matchAll(/[￥¥]\s*([\d,，]+(?:\.\d+)?)/g)) lows.push({raw:m[1],v:parseFloat(m[1].replace(/[，,]/g,''))});
+    for(const m of l.matchAll(/([\d][\d,，]{2,}(?:\.\d+)?)\s*万元/g)) lows.push({raw:m[1],v:parseFloat(m[1].replace(/[，,]/g,''))*10000});
+    for(const m of l.matchAll(/([\d][\d,，]{2,}(?:\.\d+)?)\s*元/g)){ if(!/[万元]/.test(m[0].slice(-2))) lows.push({raw:m[1],v:parseFloat(m[1].replace(/[，,]/g,''))}) }
+    ups.forEach(u=>{
+      const v=parseUpper(u);
+      if(!lows.length){ push('价款核对','warn',i,u,'有大写金额但同一行未见小写金额，请补充小写并核对一致'); return }
+      const best=lows.reduce((a,b)=>Math.abs(b.v-v)<Math.abs(a.v-v)?b:a);
+      if(Math.abs(best.v-v)>0.01) push('价款核对','red',i,u,'大写「'+u+'」（约 '+v.toLocaleString()+' 元）与同行小写「'+best.raw+'」（约 '+best.v.toLocaleString()+' 元）不一致，财务审核将退回');
+    });
+    if(lows.length&&!ups.length&&lowNoUp<8){ lowNoUp++; push('价款核对','warn',i,lows[0].raw,'小写金额未附大写金额，请按制度补充大写以防篡改歧义'); }
+    if((ups.length||lows.length)&&!/(含税|不含税|税前|税后|税率|税费|免税|价税)/.test(l)&&taxMiss<8){ taxMiss++; push('价款核对','warn',i,(ups[0]||lows[0].raw),'金额未注明含税/不含税，结算时易生争议'); }
+    const zero=lows.find(x=>x.v===0); if(zero) push('价款核对','warn',i,zero.raw,'存在 0 元金额，请确认是笔误还是有意约定');
+    const m0=l.match(/(?<![\d.,])0(?:\.00)?\s*元/); if(m0&&!zero) push('价款核对','warn',i,m0[0],'存在 0 元金额，请确认是笔误还是有意约定');
+    const badUp=ups.find(u=>/^拾/.test(u.replace(/^人民币?/,''))); if(badUp) push('价款核对','warn',i,badUp,'大写金额以「拾」开头，规范应为「壹拾」');
+    for(const m of l.matchAll(/(\d+(?:\.\d+)?)\s*%/g)){ const p=parseFloat(m[1]); if(p>100){push('价款核对','red',i,m[0],'比例超过 100%，请核对');break} }
+    /* ---- 日期有效性 ---- */
+    for(const m of l.matchAll(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/g)){ const mo=+m[2],d=+m[3]; if(mo>12||d>31||mo<1||d<1){push('日期','red',i,m[0],'日期无效（'+mo+'月'+d+'日不存在），请核对');break} }
+    /* ---- 条款引用断链 ---- */
+    for(const m of l.matchAll(/第\s*([一二三四五六七八九十百\d]+)\s*条/g)){
+      if(l.slice(0,m.index).trim()==='')continue;
+      const n=cn2int(m[1]); if(n==null)continue;
+      if(!arts.has(n)){ push('条款引用','red',i,m[0],'文中引用「'+m[0]+'」，但全文未找到该条定义——空引用/断链引用，法务审核一律修改'); break }
+    }
+    /* ---- 错别字与用词 ---- */
+    for(const tp of TYPOS){ for(const m of l.matchAll(tp.p)){ push('错别字·用词',tp.lv,i,m[0],tp.msg); break } }
+    /* ---- 标点格式 ---- */
+    if(/[\u4e00-\u9fa5][,;:]|[,;:][\u4e00-\u9fa5]/.test(l)) push('标点格式','warn',i,null,'中英文标点混用（半角 , ; : 紧邻汉字），建议统一为全角，：；');
+    const q1=(l.match(/（/g)||[]).length,q2=(l.match(/）/g)||[]).length;
+    if(q1!==q2) push('标点格式','warn',i,null,'全角括号不配对（开 '+q1+' 处、闭 '+q2+' 处），请核对');
+    const h1=(l.match(/\(/g)||[]).length,h2=(l.match(/\)/g)||[]).length;
+    if(h1!==h2) push('标点格式','warn',i,null,'半角括号不配对（开 '+h1+' 处、闭 '+h2+' 处），请核对');
+    const cq1=(l.match(/“/g)||[]).length,cq2=(l.match(/”/g)||[]).length;
+    if(cq1!==cq2) push('标点格式','warn',i,null,'中文引号不配对（成对引号可能跨行，请人工确认）');
+  });
+  CHK.findings=F;
+  renderCheckOut();
+}
+function renderCheckOut(){
+  const F=CHK.findings; if(!F){$('chkout').innerHTML='';return}
+  const reds=F.filter(x=>x.lv==='red').length, warns=F.filter(x=>x.lv==='warn').length;
+  let h='<div class="risk '+(reds?'red':warns?'warn':'')+'" style="background:'+(reds?'var(--red-weak)':warns?'var(--amber-weak)':'var(--green-weak)')+'">检查完成：共发现 <b>'+reds+'</b> 个红项、<b>'+warns+'</b> 个提示项。'+(reds?'存在红项请先修正，再进入审核流转。':'')+'</div>';
+  const order={red:0,warn:1};
+  h+='<div class="sec-title">问题清单（按级别与行号排序）</div><table class="review"><thead><tr><th style="width:92px">类别</th><th style="width:56px">级别</th><th style="width:60px">行号</th><th>原文摘录</th><th style="width:300px">问题与建议</th></tr></thead><tbody>';
+  F.slice().sort((a,b)=>order[a.lv]-order[b.lv]||a.line-b.line).forEach(x=>{
+    h+='<tr><td>'+esc(x.cat)+'</td><td>'+(x.lv==='red'?'<span class="redline">红</span>':'<span class="redline" style="background:var(--amber-weak);color:var(--amber)">黄</span>')+'</td><td>'+x.line+'</td><td style="font-size:12px;color:var(--muted)">'+esc(x.term?x.term+' … '+x.snippet:x.snippet)+'</td><td>'+esc(x.msg)+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  h+='<div class="navbtns" style="margin-top:10px"><button class="ghost" onclick="copyText(buildCheckText(),\'检查报告已复制\')">复制报告</button><button class="primary" onclick="downloadCheckDoc()">下载 Word 检查报告</button></div>';
+  h+='<div class="sec-title">标注预览（命中词黄色高亮）</div><div class="draftbox">'+buildChkHTML()+'</div>';
+  $('chkout').innerHTML=h;
+}
+function buildChkHTML(){
+  const F=CHK.findings||[]; const byLine={};
+  F.forEach(x=>{ if(x.term)(byLine[x.line]=byLine[x.line]||[]).push(x.term) });
+  return CHK.text.split(/\n/).map((l,i)=>{
+    if(!l.trim())return '';
+    let e=esc(l);
+    (byLine[i+1]||[]).forEach(t=>{ e=e.split(esc(t)).join('<mark class="ph">'+esc(t)+'</mark>') });
+    return '<p style="margin:2px 0;line-height:1.7;font-size:13px">'+e+'</p>';
+  }).join('');
+}
+function buildCheckText(){
+  const F=CHK.findings||[];
+  const reds=F.filter(x=>x.lv==='red'),warns=F.filter(x=>x.lv==='warn');
+  let s='合同内容检查报告\n文件：'+(CHK.name||'')+'\n检查时间：'+new Date().toLocaleString('zh-CN')+'\n检查范围：价款核对 / 错别字与用词 / 标点格式 / 条款引用 / 日期有效性\n结果：红项 '+reds.length+' 个，黄项 '+warns.length+' 个\n\n';
+  const dump=(title,arr)=>{ if(!arr.length)return; s+='【'+title+'】\n'+arr.map(x=>'第'+x.line+'行 '+(x.term||'')+' — '+x.msg+'\n  原文：'+x.snippet+'\n').join('')+'\n' };
+  dump('红项（必须修正）',reds); dump('黄项（建议核对）',warns);
+  s+='※ 本报告由工具自动生成，仅供辅助校对，最终以人工审校为准。\n';
+  return s;
+}
+function downloadCheckDoc(){
+  if(!CHK.findings){toast('请先运行检查');return}
+  const F=CHK.findings;
+  const sec=(title,arr)=>{ if(!arr.length)return ''; return '<p style="font-weight:700;margin:10px 0 4px">'+title+'</p><table class="summary-table">'+arr.map(x=>'<tr><th style="width:70px">第'+x.line+'行</th><td><b>'+esc(x.msg)+'</b>'+(x.term?'<br>原文：'+esc(x.term+' … '+x.snippet):'')+'</td></tr>').join('')+'</table>' };
+  const reds=F.filter(x=>x.lv==='red'),warns=F.filter(x=>x.lv==='warn');
+  const html='<h2 style="text-align:center">合同内容检查报告</h2><table class="summary-table"><tr><th>文件</th><td>'+esc(CHK.name||'')+'</td></tr><tr><th>检查时间</th><td>'+new Date().toLocaleString('zh-CN')+'</td></tr><tr><th>结果</th><td><b>红项 '+reds.length+' 个，黄项 '+warns.length+' 个</b></td></tr></table>'+sec('一、红项（必须修正）',reds)+sec('二、黄项（建议核对）',warns)+'<p style="font-size:12px;color:#66707c;margin-top:10px">本报告由工具自动生成，仅供辅助校对；价款与用字的最终确认以人工审校为准。</p>';
+  downloadWord(html,'合同内容检查报告_'+(CHK.name||'合同').replace(/\.[^.]+$/,''));
+  toast('Word 检查报告已下载');
+}
+
 /* ============ init ============ */
-renderTypeBar();renderSteps();renderStep();renderLayers();renderLayerBody();
+renderTypeBar();renderSteps();renderStep();renderLayers();renderLayerBody();renderSanOpts();
 </script>
 </body>
 </html>
