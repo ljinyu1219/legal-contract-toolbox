@@ -385,7 +385,7 @@ image:{name:'形象授权',sets:[
  {sec:'品控与履约管理', desc:'', fields:[
   {id:'sampleApproval',l:'样品审批',t:'radio',opts:['需我方书面批准后方可量产（送样数量另行说明）','不要求']},
   {id:'usageApproval',l:'使用方案送审（标注位置/色彩/图文组合，审核时限）',t:'text',hint:'例：使用前书面送审，5 个工作日内审核'},
-  {id:'brandMark',l:'版权标示与署名格式',t:'text',hint:'例：© ××文化传媒有限公司（各条款与物料格式须一致）'},
+  {id:'brandMark',l:'版权标示与署名格式',t:'text',hint:'例：© ××有限公司（各条款与物料格式须一致）'},
   {id:'factoryFiling',l:'对方生产工厂是否需我方备案',t:'radio',opts:['需要','不需要']},
   {id:'antiFake',l:'防伪与溯源',t:'checks',opts:['加贴防伪标识','溯源编码','暂不要求']},
   {id:'monitoring',l:'市场监查与假冒品处理分工、打假/控价配合时限',t:'textarea',hint:'例：收到投诉或核查要求 2 个工作日内回复'},
@@ -436,7 +436,7 @@ press:{name:'图书出版（出版社）',sets:[
   {id:'contractNo',l:'合同编号',t:'text'},
   {id:'signPlace',l:'签订地',t:'text',hint:'例：××市××区（影响管辖联系点）'},
   {id:'bookTitle',l:'作品名称（系列名+册数）',t:'text',req:1,hint:'填写系列名与册数；暂定名称的注明"暂定，出版名称双方协商确定"'},
-  {id:'authorship',l:'署名方式',t:'radio',opts:['××文化/著','××文化 出品 ×××/著','×××/著 ××文化出品','其他（另行说明）'],req:1},
+  {id:'authorship',l:'署名方式',t:'radio',opts:['××公司/著','××公司 出品 ×××/著','×××/著 ××公司出品','其他（另行说明）'],req:1},
   {id:'authorshipOther',l:'署名方式说明',t:'text',showIf:{f:'authorship',v:'其他（另行说明）'}},
   {id:'ourCopies',l:'合同份数：我方执',t:'radio',opts:['两份','一份','三份']},
   {id:'partyCopies',l:'合同份数：对方执',t:'radio',opts:['两份','一份','三份']},
