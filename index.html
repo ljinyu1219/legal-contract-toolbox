@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>法务合同工具箱 · 填报助手与审核要点</title>
 <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/legacy/build/pdf.min.js"></script>
 <style>
 :root{
   --blue:#1a5fb4; --blue-weak:#eaf2fc; --red:#c01c28; --red-weak:#fdecea;
@@ -172,7 +173,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
 <!-- ================= 模块二：审核要点 ================= -->
 <section id="panel2" class="panel">
   <div class="card">
-    <div class="note">用途：按公司四级审核流转（业务初审 → 法务 → 财务 → 审批）逐项核查合同，标注红/黄/绿并定位条款，自动生成标准审核意见书与审核话术。<b>任一红项存在时，结论强制为"不同意签署"。</b></div>
+    <div class="note">用途：按公司四级审核流转（业务初审 → 法务 → 财务 → 审批）逐项核查合同，标注红/黄/绿并定位条款，自动生成标准审核意见书与审核话术。<b>任一红项存在时，结论强制为"不同意签署"。</b>支持先上传合同文本（.docx / .doc / .pdf / .txt，或直接粘贴），边看原文边判定。</div>
+    <div id="contractBox"></div>
     <div class="layer-pick" id="layerbar"></div>
     <div id="layerBody"></div>
   </div>
@@ -1325,6 +1327,133 @@ function resetJudge(){LAYERS[curLayer].items.forEach((_,i)=>{delete judgeState[j
 function saveJudge(){try{localStorage.setItem('lcjudge',JSON.stringify(judgeState))}catch(e){}}
 (function loadJudge(){try{const s=JSON.parse(localStorage.getItem('lcjudge')||'null');if(s)Object.assign(judgeState,s)}catch(e){}})();
 
+/* ============ 审核层级：合同文本承载（docx/doc/pdf/txt/粘贴） ============ */
+function cleanX(s){return (s||'').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim()}
+async function readDocxText(f){const r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});return r.value}
+async function readPdfText(f){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF 解析组件未加载（网络原因），请改传 .docx/.txt 或直接粘贴文本');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://unpkg.com/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
+  const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+  const pages=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const tc=await(await pdf.getPage(p)).getTextContent();
+    pages.push(tc.items.map(it=>it.str).join(' ').replace(/\s+/g,' '));
+  }
+  return pages.join('\n');
+}
+function readDocBinary(buf){
+  const u8=new Uint8Array(buf);
+  const picks=[];
+  // Word .doc 正文常以 UTF-16LE 或 ANSI(GBK) 存于文档流，按连续可读片段提取
+  try{
+    const u=new TextDecoder('utf-16le').decode(u8);
+    (u.match(/[\u4e00-\u9fa5][\u4e00-\u9fa5A-Za-z0-9，。、；：""''（）？！%¥．.\-—/《》【】\s]{8,}/g)||[]).forEach(x=>picks.push(x));
+  }catch(e){}
+  try{
+    const g=new TextDecoder('gbk').decode(u8);
+    (g.match(/[\u4e00-\u9fa5][\u4e00-\u9fa5A-Za-z0-9，。、；：""''（）？！%¥．.\-—/《》【】\s]{8,}/g)||[]).forEach(x=>picks.push(x));
+  }catch(e){}
+  picks.sort((a,b)=>b.length-a.length);
+  const kept=[],low=[];
+  for(const s0 of picks){
+    // 剥离二进制噪声解码出的重复字符序列（真实 .doc 中噪声常与正文相邻连成一片）
+    let s=s0.replace(/(.)\1{3,}/g,'\n');
+    s=cleanX(s);
+    if(s.replace(/\s/g,'').length<8)continue;
+    const k=s.replace(/\s/g,'').slice(0,20);
+    if(!low.includes(k)){low.push(k);kept.push(s)}
+    if(kept.length>=40)break;
+  }
+  return cleanX(kept.join('\n'));
+}
+async function loadContractFile(input){
+  const f=input.files[0]; if(!f)return;
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  let text='',warn='';
+  try{
+    if(ext==='docx')text=await readDocxText(f);
+    else if(ext==='pdf')text=await readPdfText(f);
+    else if(ext==='txt'||ext==='md'||ext==='rtf'||ext==='htm'||ext==='html')text=cleanX(await f.text());
+    else if(ext==='doc'){
+      text=readDocBinary(await f.arrayBuffer());
+      if(text.replace(/\s/g,'').length<30)throw new Error('无法从该 .doc 中提取文字');
+      warn='旧版 .doc 为二进制格式，自动提取的文字可能有缺漏，建议另存为 .docx 或 PDF 后重新上传比对';
+    }else{text=cleanX(await f.text());warn='已按纯文本读取，若乱码请转存为 .docx/.pdf/.txt'}
+    if(text.replace(/\s/g,'').length<10)throw new Error('未从文件中解析到有效文字（可能是扫描件/图片版 PDF，请改用文字版）');
+    judgeState.contractText=text; judgeState.contractFileName=f.name;
+    saveJudge(); renderContractBox(); renderLayerBody();
+    toast('已载入「'+f.name+'」'+(f.name.toLowerCase().endsWith('.pdf')?'（'+(text.match(/\n/g)||[]).length+1+'页文本）':'')+(warn?'；'+warn:''));
+  }catch(e){toast('解析失败：'+(e.message||e))}
+  input.value='';
+}
+function importPasteText(){
+  const v=$('pasteBox').value.trim();
+  if(v.length<10){toast('请粘贴合同正文（至少 10 个字）');return}
+  judgeState.contractText=cleanX(v); judgeState.contractFileName='粘贴文本';
+  saveJudge(); renderContractBox(); renderLayerBody(); toast('已载入粘贴文本');
+}
+function clearContractText(){
+  if(!confirm('清除已载入的合同文本？（不影响已填的判定结果）'))return;
+  delete judgeState.contractText; delete judgeState.contractFileName;
+  saveJudge(); renderContractBox(); renderLayerBody();
+}
+function toggleCtext(){
+  const v=$('ctextView'); if(!v)return;
+  const open=v.style.display!=='none';
+  v.style.display=open?'none':'block';
+  $('ctextToggle').textContent=open?'展开原文 ▾':'收起原文 ▴';
+}
+function searchCtext(){
+  const q=($('ctextSearch').value||'').trim(); const v=$('ctextView'); if(!v)return;
+  const plain=judgeState.contractText||'';
+  const esc2=s=>esc(s).replace(/\n/g,'<br>');
+  if(!q){v.innerHTML=esc2(plain);return}
+  const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+  let first=true;
+  v.innerHTML=esc(plain).replace(/\n/g,'<br>').replace(re,m=>first?(first=false,'<mark id="ctextHit">'+m+'</mark>'):'<mark>'+m+'</mark>');
+  const hit=$('ctextHit'); if(hit)hit.scrollIntoView({block:'center'});
+}
+function copyPara(btn){
+  const t=btn.closest('p').getAttribute('data-t')||btn.closest('p').textContent;
+  copyText(t,'段落已复制，可粘贴到「问题与建议」');
+}
+function renderContractBox(){
+  const box=$('contractBox'); if(!box)return;
+  if(!judgeState.contractText){
+    box.innerHTML=`<div class="uploadbox" onclick="document.getElementById('ctfile').click()" style="margin-bottom:12px">
+      <b>＋ 载入合同文本</b>（.docx / .doc / .pdf / .txt，全部在本机浏览器解析，不上传服务器）
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">扫描件/图片版 PDF 无法提取文字；旧版 .doc 自动提取可能缺漏，建议另存为 .docx</div>
+    </div>
+    <input type="file" id="ctfile" accept=".docx,.doc,.pdf,.txt,.md,.rtf,.htm,.html" style="display:none" onchange="loadContractFile(this)">
+    <details style="margin-bottom:12px"><summary style="cursor:pointer;color:var(--blue);font-size:13px">或直接粘贴合同文本</summary>
+      <textarea id="pasteBox" style="margin-top:8px" placeholder="把合同全文粘贴到这里…"></textarea>
+      <div class="navbtns" style="margin-top:8px"><button class="primary" onclick="importPasteText()">载入粘贴文本</button></div>
+    </details>`;
+    return;
+  }
+  const paras=judgeState.contractText.split('\n').filter(x=>x.trim());
+  box.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px;background:var(--blue-weak,#f6f8ff)">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <b style="font-size:14px">📄 ${esc(judgeState.contractFileName||'合同文本')}</b>
+      <span style="color:var(--muted);font-size:12px">${paras.length} 段 · ${judgeState.contractText.replace(/\s/g,'').length} 字</span>
+      <span style="flex:1"></span>
+      <button class="ghost" onclick="document.getElementById('ctfile').click()">更换文件</button>
+      <button class="danger" onclick="clearContractText()">清除</button>
+    </div>
+    <input type="file" id="ctfile" accept=".docx,.doc,.pdf,.txt,.md,.rtf,.htm,.html" style="display:none" onchange="loadContractFile(this)">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+      <input id="ctextSearch" placeholder="在原文中搜索关键词，如：违约金、第十二条" style="flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px" onkeydown="if(event.key==='Enter')searchCtext()">
+      <button class="ghost" onclick="searchCtext()">搜索</button>
+      <button class="ghost" id="ctextToggle" onclick="toggleCtext()">收起原文 ▴</button>
+    </div>
+    <div id="ctextView" style="margin-top:10px;max-height:340px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.9">
+      ${paras.map(p=>`<p data-t="${esc(p).replace(/"/g,'&quot;')}" style="margin:4px 0" onclick="copyPara(this)" title="点击复制该段">${esc(p)}</p>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px">提示：点击任意段落即可复制原文，粘贴进「条款定位 / 问题与建议」栏；输入关键词回车定位原文位置。</div>
+  </div>`;
+}
+
+
 function buildOpinionDoc(forDoc){
   const L=LAYERS[curLayer];const st=calcConclusion();
   let h=forDoc?`<h2 style="text-align:center">合同审核意见书</h2>`:'';
@@ -1657,7 +1786,7 @@ function downloadCheckDoc(){
 }
 
 /* ============ init ============ */
-renderTypeBar();renderSteps();renderStep();renderLayers();renderLayerBody();renderSanOpts();
+renderTypeBar();renderSteps();renderStep();renderLayers();renderContractBox();renderLayerBody();renderSanOpts();
 </script>
 </body>
 </html>
