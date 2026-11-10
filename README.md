@@ -1,8 +1,22 @@
-# 法务合同工具箱（Legal Contract Toolbox）
+# ⚖️ 法务合同工具箱（Legal Contract Toolbox）
+
+![License](https://img.shields.io/badge/License-MIT-green) ![No Server](https://img.shields.io/badge/Backend-None_(data_stays_in_browser)-blue) ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
+**⚡ 在线试用（无需安装）：<https://ljinyu1219.github.io/legal-contract-toolbox/>**
+
+> **English TL;DR** — A single-file, pure-frontend legal contract toolbox for IP/content companies: business-info fill-in checklists with red-line validation, tiered contract review (legal/finance/approval) with auto-generated opinions, contract redaction (auto-detect parties, amounts, contacts, bank accounts), content QA (amount & typo checks), and a local policy Q&A base. All data stays in your browser — zero backend. [English README →](README.en.md)
 
 一个**纯前端、零后端、数据不出浏览器**的合同填报与审核辅助工具，覆盖合同填报 → 层级审核 → 模板生成 → 内容脱敏 → 内容检查 → 制度问答全流程。审核层级环节支持直接载入合同原文（.docx / .doc / .pdf / .txt 或粘贴），边看原文边判定。
 
 打开一个 HTML 文件即可使用，无需安装、无需联网（首次加载后 mammoth.js 解析组件可离线缓存）。
+
+![填报助手](docs/screenshot-fill.png)
+
+![审核层级](docs/screenshot-review.png)
+
+| 内容脱敏 | 制度库与问答 |
+|---|---|
+| ![内容脱敏](docs/screenshot-redact.png) | ![制度问答](docs/screenshot-policy.png) |
 
 > ⚠️ 免责声明：本工具仅供学习与内部效率参考，不构成法律意见。正式合同审查请以执业律师意见为准。
 
@@ -72,18 +86,23 @@
 
 ## 使用
 
+**最快方式：直接打开 [在线版](https://ljinyu1219.github.io/legal-contract-toolbox/)**，或：
+
 ```bash
 # 方式一：直接打开
 双击 index.html 即可
 
-# 方式二：GitHub Pages
-仓库 Settings → Pages → 选择 main 分支根目录
-
-# 方式三：本地起服务
+# 方式二：本地起服务
 python -m http.server 8080
 ```
 
 上传 .docx 需联网加载 mammoth.js（CDN）；.txt 模板完全离线可用。
+
+## 适合谁用
+
+- 中小公司 / 初创公司没有专职法务系统，靠 1 名法务或行政兼岗处理合同；
+- IP 授权、图书出版、内容制作行业，需要按公司口径反复核对同类合同；
+- 对数据隐私敏感、不愿把合同上传到任何第三方服务器的团队。
 
 ## 定制
 
@@ -93,7 +112,7 @@ python -m http.server 8080
 
 ## 技术栈
 
-原生 HTML / CSS / JavaScript 单文件实现，无框架、无构建；mammoth.js（CDN）用于浏览器内解析 .docx。
+原生 HTML / CSS / JavaScript 单文件实现，无框架、无构建；mammoth.js（CDN）用于浏览器内解析 .docx，pdf.js 用于解析 PDF。
 
 ## License
 
