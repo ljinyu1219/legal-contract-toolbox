@@ -105,6 +105,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
   <button id="tab3" onclick="switchTab(3)">③ 制式合同模板存档</button>
   <button id="tab4" onclick="switchTab(4)">④ 内容脱敏</button>
   <button id="tab5" onclick="switchTab(5)">⑤ 内容检查</button>
+  <button id="tab6" onclick="switchTab(6)">⑥ 制度库与问答</button>
 </nav>
 <main>
 
@@ -251,6 +252,22 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
     <div id="chkout" style="margin-top:16px"></div>
   </div>
 </section>
+
+<!-- ================= 模块六：制度库与问答 ================= -->
+<section id="panel6" class="panel">
+  <div class="card">
+    <div class="note">用途：公司制度归档库 + 制度问答。<b>管理员模式（仅法务本人，密码保护）</b>：上传制度文件、流程图与预设问答归档入库；<b>问答</b>：任何同事输入制度问题，工具按关键词在本机制度库内自动匹配答案并标注依据出处，全部数据不出浏览器。</div>
+    <div id="polAdminBar" style="margin-bottom:10px"></div>
+    <div id="polAdmin"></div>
+    <div class="sec-title">💬 制度问答</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="qaInput" placeholder="输入制度问题，如：授权合同的审核流程？付款申请需要哪些材料？形象授权分成为如何结算？" style="flex:1;min-width:260px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter')askPolicy()">
+      <button class="primary" onclick="askPolicy()">提问</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px" id="qaStat"></div>
+    <div id="qaOut" style="margin-top:14px"></div>
+  </div>
+</section>
 </main>
 <div id="arcMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50" onclick="closeArcView()"></div>
 <div id="arcView" style="display:none;position:fixed;z-index:60;top:5%;left:50%;transform:translateX(-50%);width:min(880px,94vw);max-height:86vh;overflow:auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
@@ -265,7 +282,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 0 34px}
 /* ============ 通用 ============ */
 function $(id){return document.getElementById(id)}
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2200)}
-function switchTab(n){for(let i=1;i<=5;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
+function switchTab(n){for(let i=1;i<=6;i++){$('panel'+i).classList.toggle('on',i===n);$('tab'+i).classList.toggle('on',i===n)}}
 function copyText(txt,okmsg){navigator.clipboard.writeText(txt).then(()=>toast(okmsg||'已复制'),()=>toast('复制失败，请手动选择文本'))}
 function downloadWord(html, filename){
   const doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+filename+'</title></head><body>'+html+'</body></html>';
@@ -1785,8 +1802,270 @@ function downloadCheckDoc(){
   toast('Word 检查报告已下载');
 }
 
+/* ============ 模块六：制度库与问答 ============ */
+let POLS=[];try{POLS=JSON.parse(localStorage.getItem('lpolicies')||'[]')}catch(e){POLS=[]}
+let polAdmin=false, polDraft=null;
+function savePOLS(){
+  try{localStorage.setItem('lpolicies',JSON.stringify(POLS));return true}
+  catch(e){toast('保存失败：本机存储空间不足（多为流程图图片过大）。请压缩图片后重试');return false}
+}
+function renderPolAdminBar(){
+  const bar=$('polAdminBar');
+  if(polAdmin){
+    bar.innerHTML=`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--blue-weak,#f6f8ff);border:1px solid var(--line);border-radius:10px;padding:9px 14px">
+      <b style="color:var(--blue)">🔑 管理员模式（法务本人）</b>
+      <span style="color:var(--muted);font-size:12px">制度库 ${POLS.length} 项 · 占用约 ${(Math.round((localStorage.getItem('lpolicies')||'').length/1024))} KB / 约 5MB</span>
+      <span style="flex:1"></span>
+      <button class="ghost" onclick="exportPol()">导出归档 JSON</button>
+      <button class="ghost" onclick="document.getElementById('polimp').click()">导入归档 JSON</button>
+      <input type="file" id="polimp" accept=".json" style="display:none" onchange="importPol(this)">
+      <button class="danger" onclick="polLogout()">退出管理</button>
+    </div>`;
+  }else{
+    bar.innerHTML=`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line);border-radius:10px;padding:9px 14px">
+      <span style="font-size:13px;color:var(--muted)">制度归档由法务本人维护。如需更新制度/流程图，请进入管理员模式。</span>
+      <span style="flex:1"></span>
+      <input id="polpw" type="password" placeholder="管理员密码" style="width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px" onkeydown="if(event.key==='Enter')polLogin()">
+      <button class="ghost" onclick="polLogin()">管理员登录</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">首次登录即设置密码（至少 4 位），密码只保存在这台电脑的浏览器里。</div>`;
+  }
+}
+function polLogin(){
+  const pw=$('polpw').value, saved=localStorage.getItem('lpolpw');
+  if(!saved){
+    if((pw||'').length<4){toast('首次使用请设置至少 4 位的管理密码');return}
+    localStorage.setItem('lpolpw',pw); polAdmin=true;
+    renderPolAdminBar(); renderPolAdmin(); toast('管理密码已设置，本机仅凭此密码可进入管理员模式');
+  }else if(pw===saved){ polAdmin=true; renderPolAdminBar(); renderPolAdmin(); toast('已进入管理员模式'); }
+  else toast('密码不正确');
+  $('polpw').value='';
+}
+function polLogout(){polAdmin=false;renderPolAdminBar();renderPolAdmin()}
+function renderPolAdmin(){
+  const box=$('polAdmin'); if(!box)return;
+  if(!polAdmin){box.innerHTML='';return}
+  box.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px">
+    <h2 style="font-size:16px;margin:0 0 10px"><span class="no">＋</span>归档新制度 / 流程图 / 问答</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input id="polName" placeholder="制度名称（例：合同审核管理制度 V2.1）" style="flex:2;min-width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+      <input id="polTags" placeholder="关键词，逗号分隔（例：审核,流程,授权,付款）" style="flex:2;min-width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px">
+      <select id="polType" style="flex:1;min-width:130px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff" onchange="renderPolAdmin()">
+        <option value="doc">制度文件</option><option value="flow">流程图</option><option value="faq">预设问答</option>
+      </select>
+    </div>
+    ${$('polType').value==='faq'?`
+      <textarea id="polQ" placeholder="问：同事常问的问题原文（例：形象授权的分成比例怎么定？）" style="margin-bottom:8px"></textarea>
+      <textarea id="polA" placeholder="答：标准答案（将原样展示给提问同事）"></textarea>
+    `:$('polType').value==='flow'?`
+      <div class="uploadbox" onclick="document.getElementById('polfile').click()" style="padding:16px">
+        <b>点击选择流程图图片</b>（.png / .jpg / .webp，自动压缩到约 1100px 宽）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="polfname"></div>
+      </div>
+      <input type="file" id="polfile" accept=".png,.jpg,.jpeg,.webp" style="display:none" onchange="onPolFile(this)">
+    `:`
+      <div class="uploadbox" onclick="document.getElementById('polfile').click()" style="padding:16px">
+        <b>点击选择制度文件</b>（.docx / .doc / .pdf / .txt，自动提取全文用于问答检索）<div style="font-size:12px;color:var(--muted);margin-top:4px" id="polfname"></div>
+      </div>
+      <input type="file" id="polfile" accept=".docx,.doc,.pdf,.txt,.md" style="display:none" onchange="onPolFile(this)">
+    `}
+    ${polDraft&&polDraft.img?`<div style="margin-top:8px"><img src="${polDraft.img}" style="max-width:100%;max-height:260px;border:1px solid var(--line);border-radius:8px"></div>`:''}
+    ${polDraft&&polDraft.text?`<div style="font-size:12px;color:var(--muted);margin-top:8px">已提取正文 ${polDraft.text.replace(/\s/g,'').length} 字 ✔</div>`:''}
+    <div class="navbtns" style="margin-top:10px">
+      <button class="primary" onclick="savePolEntry()">存入制度库</button>
+      <button class="ghost" onclick="polDraft=null;renderPolAdmin()">重置</button>
+    </div>
+  </div>
+  <div class="sec-title">制度库（${POLS.length} 项）</div>
+  ${POLS.length?`<table class="review"><thead><tr><th>名称</th><th style="width:90px">类型</th><th>关键词</th><th style="width:70px">规模</th><th style="width:150px">操作</th></tr></thead><tbody>
+    ${POLS.map(e=>`<tr><td>${esc(e.name)}<div style="font-size:11px;color:var(--muted)">${e.date}</div></td>
+      <td>${({doc:'📄 制度',flow:'🗺️ 流程图',faq:'💬 问答'})[e.type]}</td>
+      <td style="font-size:12px;color:var(--muted)">${esc((e.tags||[]).join('、'))}</td>
+      <td style="font-size:12px">${e.type==='flow'?'图片':(e.text||'').replace(/\s/g,'').length+' 字'}</td>
+      <td><button class="ghost" onclick="viewPolEntry('${e.id}')">查看</button> <button class="danger" onclick="delPolEntry('${e.id}')">删除</button></td></tr>`).join('')}
+  </tbody></table>`:'<div style="color:var(--muted);font-size:13px">制度库为空。先归档几份核心制度（如审核管理制度、付款流程、授权业务指引），同事即可开始提问。</div>'}`;
+}
+async function onPolFile(input){
+  const f=input.files[0]; if(!f)return;
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  try{
+    if(['png','jpg','jpeg','webp'].includes(ext)){
+      polDraft=await polReadImage(f);
+    }else{
+      let text='';
+      if(ext==='docx')text=await readDocxText(f);
+      else if(ext==='pdf')text=await readPdfText(f);
+      else if(ext==='doc'){text=readDocBinary(await f.arrayBuffer());if(text.replace(/\s/g,'').length<30)throw new Error('无法从该 .doc 中提取文字，请另存为 .docx')}
+      else text=cleanX(await f.text());
+      text=cleanX(text);
+      if(text.replace(/\s/g,'').length<20)throw new Error('未提取到有效文字（可能是扫描件/图片版 PDF，请改用文字版）');
+      polDraft={text};
+    }
+    if(!$('polName').value)$('polName').value=f.name.replace(/\.[^.]+$/,'');
+    renderPolAdmin(); toast('文件已解析：'+f.name);
+  }catch(e){toast('解析失败：'+(e.message||e))}
+  input.value='';
+}
+function polReadImage(f){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const im=new Image();
+      im.onload=()=>{
+        const max=1100; let w=im.width,h=im.height;
+        if(w>max){h=Math.round(h*max/w);w=max}
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(im,0,0,w,h);
+        res({img:cv.toDataURL('image/jpeg',0.82)});
+      };
+      im.onerror=()=>rej(new Error('图片读取失败'));
+      im.src=fr.result;
+    };
+    fr.onerror=()=>rej(new Error('文件读取失败'));
+    fr.readAsDataURL(f);
+  });
+}
+function savePolEntry(){
+  const name=$('polName').value.trim();
+  const tags=($('polTags').value||'').split(/[,，、\s]+/).filter(Boolean);
+  const type=$('polType').value;
+  if(!name){toast('请填写制度名称');return}
+  let entry={id:'p'+Date.now(),name,tags,type,date:new Date().toLocaleDateString('zh-CN')};
+  if(type==='faq'){
+    const q=$('polQ').value.trim(), a=$('polA').value.trim();
+    if(!q||!a){toast('预设问答需要填写问题和答案');return}
+    entry.q=q; entry.text=a;
+  }else if(type==='flow'){
+    if(!polDraft||!polDraft.img){toast('请先上传流程图图片');return}
+    entry.img=polDraft.img;
+  }else{
+    if(!polDraft||!polDraft.text){toast('请先上传制度文件');return}
+    entry.text=polDraft.text;
+  }
+  POLS.unshift(entry);
+  if(!savePOLS()){POLS.shift();return}
+  polDraft=null;
+  renderPolAdmin(); renderPolAdminBar();
+  toast('已存入制度库：'+name);
+}
+function delPolEntry(id){
+  const e=POLS.find(x=>x.id===id); if(!e)return;
+  if(!confirm('删除「'+e.name+'」？建议先导出归档 JSON 备份。'))return;
+  POLS=POLS.filter(x=>x.id!==id); savePOLS(); renderPolAdmin(); renderPolAdminBar();
+}
+function viewPolEntry(id){
+  const e=POLS.find(x=>x.id===id); if(!e)return;
+  let h=`<h3 style="margin:0 0 4px">${esc(e.name)}</h3>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.date} · ${{doc:'制度文件',flow:'流程图',faq:'预设问答'}[e.type]} · 关键词：${esc((e.tags||[]).join('、'))||'—'}</div>`;
+  if(e.img)h+=`<img src="${e.img}" style="max-width:100%">`;
+  if(e.q)h+=`<p style="background:var(--blue-weak,#f6f8ff);padding:10px 12px;border-radius:8px"><b>问：</b>${esc(e.q)}</p>`;
+  if(e.text)h+=`<div style="white-space:pre-wrap;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px;padding:12px 14px;max-height:50vh;overflow:auto">${esc(e.text)}</div>`;
+  $('arcViewBody').innerHTML=h;
+  $('arcMask').style.display='block'; $('arcView').style.display='block';
+}
+function exportPol(){
+  if(!POLS.length){toast('制度库为空');return}
+  const blob=new Blob([JSON.stringify(POLS)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='制度归档库_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('已导出归档 JSON（'+POLS.length+' 项）');
+}
+function importPol(input){
+  const f=input.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const arr=JSON.parse(r.result);
+      if(!Array.isArray(arr))throw new Error('格式不符');
+      const oldIds=new Set(POLS.map(x=>x.id));
+      const add=arr.filter(x=>x&&x.id&&!oldIds.has(x.id));
+      POLS=add.concat(POLS);
+      if(!savePOLS()){POLS=POLS.slice(add.length);return}
+      renderPolAdmin(); renderPolAdminBar();
+      toast('已导入 '+add.length+' 项（跳过重复 '+ (arr.length-add.length) +' 项）');
+    }catch(e){toast('导入失败：'+(e.message||'JSON 解析错误'))}
+  };
+  r.readAsText(f,'utf-8'); input.value='';
+}
+/* ---- 制度问答检索 ---- */
+function qaTokens(q){
+  const toks=new Set();
+  (q.match(/[\u4e00-\u9fa5]{2,}|[A-Za-z]{2,}|\d+/g)||[]).forEach(run=>{
+    toks.add(run.toLowerCase());
+    for(let i=0;i+2<=run.length;i++)toks.add(run.slice(i,i+2).toLowerCase());
+  });
+  return [...toks];
+}
+function polScore(e,toks){
+  let s=0;
+  const nl=((e.name||'')+' '+(e.tags||[]).join(' ')).toLowerCase();
+  const tl=(e.type==='faq'?(e.q||'')+' '+(e.text||''):(e.text||'')).toLowerCase();
+  toks.forEach(t=>{if(nl.includes(t))s+=3;if(tl.includes(t))s+=1});
+  return s;
+}
+function bestSents(text,toks){
+  const sents=(text||'').split(/[。！？；\n]/).map(x=>x.trim()).filter(x=>x.length>=6);
+  return sents.map(sn=>({sn,hits:toks.filter(t=>sn.toLowerCase().includes(t)).length}))
+    .filter(x=>x.hits>0).sort((a,b)=>b.hits-a.hits).slice(0,3).map(x=>x.sn);
+}
+function hlTerms(s,toks){
+  let out=esc(s);
+  toks.filter(t=>t.length>=2).forEach(t=>{
+    out=out.replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>'<mark>'+m+'</mark>');
+  });
+  return out;
+}
+function askPolicy(){
+  const q=$('qaInput').value.trim();
+  if(!q){toast('请输入制度问题');return}
+  const out=$('qaOut'); out.innerHTML='<div style="color:var(--muted);font-size:13px">检索制度库中…</div>';
+  setTimeout(()=>{
+    const toks=qaTokens(q);
+    const faqs=POLS.filter(e=>e.type==='faq').map(e=>({e,s:polScore(e,toks)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+    const docs=POLS.filter(e=>e.type!=='faq').map(e=>({e,s:polScore(e,toks)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,3);
+    let h='';
+    if(faqs.length&&faqs[0].s>=4){
+      const e=faqs[0].e;
+      h+=`<div style="border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--blue);margin-bottom:6px">💬 制度库预设答案</div>
+        <div style="font-size:14px;line-height:1.9">${hlTerms(e.text,toks)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">依据：${esc(e.name)}${e.tags&&e.tags.length?'（'+esc(e.tags.join('、'))+'）':''}</div></div>`;
+    }
+    if(docs.length){
+      h+=`<div class="sec-title">制度原文摘录</div>`;
+      docs.forEach(({e,s})=>{
+        const sents=bestSents(e.text||'',toks);
+        h+=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <b style="font-size:14px">${esc(e.name)}</b>
+            <span style="font-size:12px;color:var(--muted)">${{doc:'📄 制度文件',flow:'🗺️ 流程图'}[e.type]} · 匹配度 ${s}</span>
+            <span style="flex:1"></span>
+            ${e.img?'<button class="ghost" onclick="viewPolEntry(\''+e.id+'\')">查看流程图</button>':''}
+            ${e.text?'<button class="ghost" onclick="viewPolEntry(\''+e.id+'\')">查看全文</button>':''}
+          </div>
+          ${e.img?`<div style="margin-top:8px"><img src="${e.img}" style="max-width:100%;max-height:300px;border:1px solid var(--line);border-radius:8px"></div>`:''}
+          ${sents.length?`<ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.9">${sents.map(sn=>'<li>'+hlTerms(sn,toks)+'</li>').join('')}</ul>`
+            :(e.img?'':`<div style="font-size:12px;color:var(--muted);margin-top:6px">未在正文中定位到直接相关句子，请查看全文或联系法务确认。</div>`)}
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">依据：《${esc(e.name)}》${(e.tags||[]).length?' · 关键词：'+esc(e.tags.join('、')):''}</div>
+        </div>`;
+      });
+    }
+    if(!h){
+      h=`<div style="border:1px dashed var(--line);border-radius:10px;padding:16px;color:var(--muted);font-size:13px;line-height:1.9">
+        制度库中暂未找到与该问题直接相关的内容。建议：<br>
+        ① 换用制度文件里的用词再问一次（如「审核层级」「付款」「分成结算」「授权区域」）；<br>
+        ② 联系法务/管理员确认，并将标准答复交给法务存入制度库，下次即可自动回答。
+      </div>`;
+    }
+    out.innerHTML=h;
+  },60);
+}
+function renderQaStat(){
+  const n=POLS.length;
+  $('qaStat').textContent=n?('制度库共 '+n+' 项（制度 '+POLS.filter(x=>x.type==='doc').length+'、流程图 '+POLS.filter(x=>x.type==='flow').length+'、预设问答 '+POLS.filter(x=>x.type==='faq').length+'），检索在本机完成'):'制度库暂无内容：请法务在管理员模式下归档制度后，同事即可提问。';
+}
+
 /* ============ init ============ */
-renderTypeBar();renderSteps();renderStep();renderLayers();renderContractBox();renderLayerBody();renderSanOpts();
+renderTypeBar();renderSteps();renderStep();renderLayers();renderContractBox();renderLayerBody();renderSanOpts();renderPolAdminBar();renderPolAdmin();renderQaStat();
 </script>
 </body>
 </html>
